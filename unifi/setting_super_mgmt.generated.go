@@ -29,53 +29,54 @@ type SettingSuperMgmt struct {
 
 	Key string `json:"key"`
 
-	AnalyticsDisapprovedFor                  string   `json:"analytics_disapproved_for,omitempty"`
-	AutoUpgrade                              bool     `json:"auto_upgrade"`
-	AutobackupCronExpr                       string   `json:"autobackup_cron_expr,omitempty"`
-	AutobackupDays                           int      `json:"autobackup_days,omitempty"`
-	AutobackupEnabled                        bool     `json:"autobackup_enabled"`
-	AutobackupGcsBucket                      string   `json:"autobackup_gcs_bucket,omitempty"`
-	AutobackupGcsCertificatePath             string   `json:"autobackup_gcs_certificate_path,omitempty"`
-	AutobackupLocalPath                      string   `json:"autobackup_local_path,omitempty"`
-	AutobackupMaxFiles                       int      `json:"autobackup_max_files,omitempty"`
-	AutobackupPostActions                    []string `json:"autobackup_post_actions,omitempty" validate:"omitempty,oneof=copy_local copy_s3 copy_gcs copy_cloud"` // copy_local|copy_s3|copy_gcs|copy_cloud
-	AutobackupS3AccessKey                    string   `json:"autobackup_s3_access_key,omitempty"`
-	AutobackupS3AccessSecret                 string   `json:"autobackup_s3_access_secret,omitempty"`
-	AutobackupS3Bucket                       string   `json:"autobackup_s3_bucket,omitempty"`
-	AutobackupTimezone                       string   `json:"autobackup_timezone,omitempty"`
-	BackupToCloudEnabled                     bool     `json:"backup_to_cloud_enabled"`
-	ContactInfoCity                          string   `json:"contact_info_city,omitempty"`
-	ContactInfoCompanyName                   string   `json:"contact_info_company_name,omitempty"`
-	ContactInfoCountry                       string   `json:"contact_info_country,omitempty"`
-	ContactInfoFullName                      string   `json:"contact_info_full_name,omitempty"`
-	ContactInfoPhoneNumber                   string   `json:"contact_info_phone_number,omitempty"`
-	ContactInfoShippingAddress1              string   `json:"contact_info_shipping_address_1,omitempty"`
-	ContactInfoShippingAddress2              string   `json:"contact_info_shipping_address_2,omitempty"`
-	ContactInfoState                         string   `json:"contact_info_state,omitempty"`
-	ContactInfoZip                           string   `json:"contact_info_zip,omitempty"`
-	DataRetentionSettingPreference           string   `json:"data_retention_setting_preference,omitempty" validate:"omitempty,oneof=auto manual"` // auto|manual
-	DataRetentionTimeInHoursFor5MinutesScale int      `json:"data_retention_time_in_hours_for_5minutes_scale,omitempty"`
-	DataRetentionTimeInHoursForDailyScale    int      `json:"data_retention_time_in_hours_for_daily_scale,omitempty"`
-	DataRetentionTimeInHoursForHourlyScale   int      `json:"data_retention_time_in_hours_for_hourly_scale,omitempty"`
-	DataRetentionTimeInHoursForMonthlyScale  int      `json:"data_retention_time_in_hours_for_monthly_scale,omitempty"`
-	DataRetentionTimeInHoursForOthers        int      `json:"data_retention_time_in_hours_for_others,omitempty"`
-	DefaultSiteDeviceAuthPasswordAlert       string   `json:"default_site_device_auth_password_alert,omitempty"` // false
-	Discoverable                             bool     `json:"discoverable"`
-	EnableAnalytics                          bool     `json:"enable_analytics"`
-	GoogleMapsApiKey                         string   `json:"google_maps_api_key,omitempty"`
-	ImageMapsUseGoogleEngine                 bool     `json:"image_maps_use_google_engine"`
-	LedEnabled                               bool     `json:"led_enabled"`
-	LiveChat                                 string   `json:"live_chat,omitempty" validate:"omitempty,oneof=disabled super-only everyone"` // disabled|super-only|everyone
-	LiveUpdates                              string   `json:"live_updates,omitempty" validate:"omitempty,oneof=disabled live auto"`        // disabled|live|auto
-	MinimumUsableHdSpace                     int      `json:"minimum_usable_hd_space,omitempty"`
-	MinimumUsableSdSpace                     int      `json:"minimum_usable_sd_space,omitempty"`
-	MultipleSitesEnabled                     bool     `json:"multiple_sites_enabled"`
-	OverrideInformHost                       bool     `json:"override_inform_host"`
-	OverrideInformHostLocation               string   `json:"override_inform_host_location,omitempty"`
-	StoreEnabled                             string   `json:"store_enabled,omitempty" validate:"omitempty,oneof=disabled super-only everyone"` // disabled|super-only|everyone
-	TimeSeriesPerClientStatsEnabled          bool     `json:"time_series_per_client_stats_enabled"`
-	XSshPassword                             string   `json:"x_ssh_password,omitempty"`
-	XSshUsername                             string   `json:"x_ssh_username,omitempty"`
+	AnalyticsDisapprovedFor                  string                     `json:"analytics_disapproved_for,omitempty"`
+	AutoUpgrade                              bool                       `json:"auto_upgrade"`
+	AutobackupCronExpr                       string                     `json:"autobackup_cron_expr,omitempty"`
+	AutobackupDays                           int                        `json:"autobackup_days,omitempty"`
+	AutobackupEnabled                        bool                       `json:"autobackup_enabled"`
+	AutobackupGcsBucket                      string                     `json:"autobackup_gcs_bucket,omitempty"`
+	AutobackupGcsCertificatePath             string                     `json:"autobackup_gcs_certificate_path,omitempty"`
+	AutobackupLocalPath                      string                     `json:"autobackup_local_path,omitempty"`
+	AutobackupMaxFiles                       int                        `json:"autobackup_max_files,omitempty"`
+	AutobackupPostActions                    []string                   `json:"autobackup_post_actions,omitempty" validate:"omitempty,oneof=copy_local copy_s3 copy_gcs copy_cloud"` // copy_local|copy_s3|copy_gcs|copy_cloud
+	AutobackupS3AccessKey                    string                     `json:"autobackup_s3_access_key,omitempty"`
+	AutobackupS3AccessSecret                 string                     `json:"autobackup_s3_access_secret,omitempty"`
+	AutobackupS3Bucket                       string                     `json:"autobackup_s3_bucket,omitempty"`
+	AutobackupTimezone                       string                     `json:"autobackup_timezone,omitempty"`
+	BackupToCloudEnabled                     bool                       `json:"backup_to_cloud_enabled"`
+	ContactInfoCity                          string                     `json:"contact_info_city,omitempty"`
+	ContactInfoCompanyName                   string                     `json:"contact_info_company_name,omitempty"`
+	ContactInfoCountry                       string                     `json:"contact_info_country,omitempty"`
+	ContactInfoFullName                      string                     `json:"contact_info_full_name,omitempty"`
+	ContactInfoPhoneNumber                   string                     `json:"contact_info_phone_number,omitempty"`
+	ContactInfoShippingAddress1              string                     `json:"contact_info_shipping_address_1,omitempty"`
+	ContactInfoShippingAddress2              string                     `json:"contact_info_shipping_address_2,omitempty"`
+	ContactInfoState                         string                     `json:"contact_info_state,omitempty"`
+	ContactInfoZip                           string                     `json:"contact_info_zip,omitempty"`
+	DataRetentionSettingPreference           string                     `json:"data_retention_setting_preference,omitempty" validate:"omitempty,oneof=auto manual"` // auto|manual
+	DataRetentionTimeInHoursFor5MinutesScale int                        `json:"data_retention_time_in_hours_for_5minutes_scale,omitempty"`
+	DataRetentionTimeInHoursForDailyScale    int                        `json:"data_retention_time_in_hours_for_daily_scale,omitempty"`
+	DataRetentionTimeInHoursForHourlyScale   int                        `json:"data_retention_time_in_hours_for_hourly_scale,omitempty"`
+	DataRetentionTimeInHoursForMonthlyScale  int                        `json:"data_retention_time_in_hours_for_monthly_scale,omitempty"`
+	DataRetentionTimeInHoursForOthers        int                        `json:"data_retention_time_in_hours_for_others,omitempty"`
+	DefaultSiteDeviceAuthPasswordAlert       string                     `json:"default_site_device_auth_password_alert,omitempty"` // false
+	Discoverable                             bool                       `json:"discoverable"`
+	EnableAnalytics                          bool                       `json:"enable_analytics"`
+	GoogleMapsApiKey                         string                     `json:"google_maps_api_key,omitempty"`
+	ImageMapsUseGoogleEngine                 bool                       `json:"image_maps_use_google_engine"`
+	LedEnabled                               bool                       `json:"led_enabled"`
+	LiveChat                                 string                     `json:"live_chat,omitempty" validate:"omitempty,oneof=disabled super-only everyone"` // disabled|super-only|everyone
+	LiveUpdates                              string                     `json:"live_updates,omitempty" validate:"omitempty,oneof=disabled live auto"`        // disabled|live|auto
+	MinimumUsableHdSpace                     int                        `json:"minimum_usable_hd_space,omitempty"`
+	MinimumUsableSdSpace                     int                        `json:"minimum_usable_sd_space,omitempty"`
+	MultipleSitesEnabled                     bool                       `json:"multiple_sites_enabled"`
+	OverrideInformHost                       bool                       `json:"override_inform_host"`
+	OverrideInformHostLocation               string                     `json:"override_inform_host_location,omitempty"`
+	StoreEnabled                             string                     `json:"store_enabled,omitempty" validate:"omitempty,oneof=disabled super-only everyone"` // disabled|super-only|everyone
+	TimeSeriesPerClientStatsEnabled          bool                       `json:"time_series_per_client_stats_enabled"`
+	XSshPassword                             string                     `json:"x_ssh_password,omitempty"`
+	XSshUsername                             string                     `json:"x_ssh_username,omitempty"`
+	ExtraFields                              map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *SettingSuperMgmt) UnmarshalJSON(b []byte) error {
@@ -110,7 +111,97 @@ func (dst *SettingSuperMgmt) UnmarshalJSON(b []byte) error {
 	dst.MinimumUsableHdSpace = int(aux.MinimumUsableHdSpace)
 	dst.MinimumUsableSdSpace = int(aux.MinimumUsableSdSpace)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":                                             {},
+			"site_id":                                         {},
+			"attr_hidden":                                     {},
+			"attr_hidden_id":                                  {},
+			"attr_no_delete":                                  {},
+			"attr_no_edit":                                    {},
+			"key":                                             {},
+			"analytics_disapproved_for":                       {},
+			"auto_upgrade":                                    {},
+			"autobackup_cron_expr":                            {},
+			"autobackup_days":                                 {},
+			"autobackup_enabled":                              {},
+			"autobackup_gcs_bucket":                           {},
+			"autobackup_gcs_certificate_path":                 {},
+			"autobackup_local_path":                           {},
+			"autobackup_max_files":                            {},
+			"autobackup_post_actions":                         {},
+			"autobackup_s3_access_key":                        {},
+			"autobackup_s3_access_secret":                     {},
+			"autobackup_s3_bucket":                            {},
+			"autobackup_timezone":                             {},
+			"backup_to_cloud_enabled":                         {},
+			"contact_info_city":                               {},
+			"contact_info_company_name":                       {},
+			"contact_info_country":                            {},
+			"contact_info_full_name":                          {},
+			"contact_info_phone_number":                       {},
+			"contact_info_shipping_address_1":                 {},
+			"contact_info_shipping_address_2":                 {},
+			"contact_info_state":                              {},
+			"contact_info_zip":                                {},
+			"data_retention_setting_preference":               {},
+			"data_retention_time_in_hours_for_5minutes_scale": {},
+			"data_retention_time_in_hours_for_daily_scale":    {},
+			"data_retention_time_in_hours_for_hourly_scale":   {},
+			"data_retention_time_in_hours_for_monthly_scale":  {},
+			"data_retention_time_in_hours_for_others":         {},
+			"default_site_device_auth_password_alert":         {},
+			"discoverable":                                    {},
+			"enable_analytics":                                {},
+			"google_maps_api_key":                             {},
+			"image_maps_use_google_engine":                    {},
+			"led_enabled":                                     {},
+			"live_chat":                                       {},
+			"live_updates":                                    {},
+			"minimum_usable_hd_space":                         {},
+			"minimum_usable_sd_space":                         {},
+			"multiple_sites_enabled":                          {},
+			"override_inform_host":                            {},
+			"override_inform_host_location":                   {},
+			"store_enabled":                                   {},
+			"time_series_per_client_stats_enabled":            {},
+			"x_ssh_password":                                  {},
+			"x_ssh_username":                                  {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src SettingSuperMgmt) MarshalJSON() ([]byte, error) {
+	type Alias SettingSuperMgmt
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 // GetSettingSuperMgmt Experimental! This function is not yet stable and may change in the future.

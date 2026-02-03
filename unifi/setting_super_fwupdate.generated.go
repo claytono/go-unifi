@@ -29,9 +29,10 @@ type SettingSuperFwupdate struct {
 
 	Key string `json:"key"`
 
-	ControllerChannel string `json:"controller_channel,omitempty" validate:"omitempty,oneof=internal alpha beta release-candidate release"` // internal|alpha|beta|release-candidate|release
-	FirmwareChannel   string `json:"firmware_channel,omitempty" validate:"omitempty,oneof=internal alpha beta release-candidate release"`   // internal|alpha|beta|release-candidate|release
-	SsoEnabled        bool   `json:"sso_enabled"`
+	ControllerChannel string                     `json:"controller_channel,omitempty" validate:"omitempty,oneof=internal alpha beta release-candidate release"` // internal|alpha|beta|release-candidate|release
+	FirmwareChannel   string                     `json:"firmware_channel,omitempty" validate:"omitempty,oneof=internal alpha beta release-candidate release"`   // internal|alpha|beta|release-candidate|release
+	SsoEnabled        bool                       `json:"sso_enabled"`
+	ExtraFields       map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *SettingSuperFwupdate) UnmarshalJSON(b []byte) error {
@@ -47,7 +48,53 @@ func (dst *SettingSuperFwupdate) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":                {},
+			"site_id":            {},
+			"attr_hidden":        {},
+			"attr_hidden_id":     {},
+			"attr_no_delete":     {},
+			"attr_no_edit":       {},
+			"key":                {},
+			"controller_channel": {},
+			"firmware_channel":   {},
+			"sso_enabled":        {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src SettingSuperFwupdate) MarshalJSON() ([]byte, error) {
+	type Alias SettingSuperFwupdate
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 // GetSettingSuperFwupdate Experimental! This function is not yet stable and may change in the future.

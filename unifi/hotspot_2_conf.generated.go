@@ -75,6 +75,7 @@ type Hotspot2Conf struct {
 	VenueGroup              int                                 `json:"venue_group,omitempty" validate:"omitempty,oneof=0 1 2 3 4 5 6 7 8 9 10 11"` // 0|1|2|3|4|5|6|7|8|9|10|11
 	VenueName               []Hotspot2ConfVenueName             `json:"venue_name,omitempty"`
 	VenueType               int                                 `json:"venue_type,omitempty" validate:"omitempty,oneof=0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15"` // 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15
+	ExtraFields             map[string]json.RawMessage          `json:"-"`
 }
 
 func (dst *Hotspot2Conf) UnmarshalJSON(b []byte) error {
@@ -123,13 +124,106 @@ func (dst *Hotspot2Conf) UnmarshalJSON(b []byte) error {
 	dst.VenueGroup = int(aux.VenueGroup)
 	dst.VenueType = int(aux.VenueType)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":                        {},
+			"site_id":                    {},
+			"attr_hidden":                {},
+			"attr_hidden_id":             {},
+			"attr_no_delete":             {},
+			"attr_no_edit":               {},
+			"anqp_domain_id":             {},
+			"capab":                      {},
+			"cellular_network_list":      {},
+			"deauth_req_timeout":         {},
+			"disable_dgaf":               {},
+			"domain_name_list":           {},
+			"friendly_name":              {},
+			"gas_advanced":               {},
+			"gas_comeback_delay":         {},
+			"gas_frag_limit":             {},
+			"hessid":                     {},
+			"hessid_used":                {},
+			"ipaddr_type_avail_v4":       {},
+			"ipaddr_type_avail_v6":       {},
+			"icons":                      {},
+			"metrics_downlink_load":      {},
+			"metrics_downlink_load_set":  {},
+			"metrics_downlink_speed":     {},
+			"metrics_downlink_speed_set": {},
+			"metrics_info_at_capacity":   {},
+			"metrics_info_link_status":   {},
+			"metrics_info_symmetric":     {},
+			"metrics_measurement":        {},
+			"metrics_measurement_set":    {},
+			"metrics_status":             {},
+			"metrics_uplink_load":        {},
+			"metrics_uplink_load_set":    {},
+			"metrics_uplink_speed":       {},
+			"metrics_uplink_speed_set":   {},
+			"nai_realm_list":             {},
+			"name":                       {},
+			"network_access_asra":        {},
+			"network_access_esr":         {},
+			"network_access_internet":    {},
+			"network_access_uesa":        {},
+			"network_auth_type":          {},
+			"network_auth_url":           {},
+			"network_type":               {},
+			"osu":                        {},
+			"osu_ssid":                   {},
+			"qos_map_dcsp":               {},
+			"qos_map_exceptions":         {},
+			"qos_map_status":             {},
+			"roaming_consortium_list":    {},
+			"save_timestamp":             {},
+			"t_c_filename":               {},
+			"t_c_timestamp":              {},
+			"venue_group":                {},
+			"venue_name":                 {},
+			"venue_type":                 {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src Hotspot2Conf) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2Conf
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type Hotspot2ConfCapab struct {
-	Port     int    `json:"port,omitempty"`                                                         // ^(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])|$
-	Protocol string `json:"protocol,omitempty" validate:"omitempty,oneof=icmp tcp_udp tcp udp esp"` // icmp|tcp_udp|tcp|udp|esp
-	Status   string `json:"status,omitempty" validate:"omitempty,oneof=closed open unknown"`        // closed|open|unknown
+	Port        int                        `json:"port,omitempty"`                                                         // ^(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])|$
+	Protocol    string                     `json:"protocol,omitempty" validate:"omitempty,oneof=icmp tcp_udp tcp udp esp"` // icmp|tcp_udp|tcp|udp|esp
+	Status      string                     `json:"status,omitempty" validate:"omitempty,oneof=closed open unknown"`        // closed|open|unknown
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Hotspot2ConfCapab) UnmarshalJSON(b []byte) error {
@@ -148,13 +242,53 @@ func (dst *Hotspot2ConfCapab) UnmarshalJSON(b []byte) error {
 	}
 	dst.Port = int(aux.Port)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"port":     {},
+			"protocol": {},
+			"status":   {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src Hotspot2ConfCapab) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2ConfCapab
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type Hotspot2ConfCellularNetworkList struct {
-	Mcc  int    `json:"mcc,omitempty"`
-	Mnc  int    `json:"mnc,omitempty"`
-	Name string `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	Mcc         int                        `json:"mcc,omitempty"`
+	Mnc         int                        `json:"mnc,omitempty"`
+	Name        string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Hotspot2ConfCellularNetworkList) UnmarshalJSON(b []byte) error {
@@ -175,12 +309,52 @@ func (dst *Hotspot2ConfCellularNetworkList) UnmarshalJSON(b []byte) error {
 	dst.Mcc = int(aux.Mcc)
 	dst.Mnc = int(aux.Mnc)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"mcc":  {},
+			"mnc":  {},
+			"name": {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src Hotspot2ConfCellularNetworkList) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2ConfCellularNetworkList
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type Hotspot2ConfDescription struct {
-	Language string `json:"language,omitempty"`                                // [a-z]{3}
-	Text     string `json:"text,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	Language    string                     `json:"language,omitempty"`                                // [a-z]{3}
+	Text        string                     `json:"text,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Hotspot2ConfDescription) UnmarshalJSON(b []byte) error {
@@ -196,12 +370,51 @@ func (dst *Hotspot2ConfDescription) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"language": {},
+			"text":     {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src Hotspot2ConfDescription) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2ConfDescription
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type Hotspot2ConfFriendlyName struct {
-	Language string `json:"language,omitempty"`                                // [a-z]{3}
-	Text     string `json:"text,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	Language    string                     `json:"language,omitempty"`                                // [a-z]{3}
+	Text        string                     `json:"text,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Hotspot2ConfFriendlyName) UnmarshalJSON(b []byte) error {
@@ -217,11 +430,50 @@ func (dst *Hotspot2ConfFriendlyName) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"language": {},
+			"text":     {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src Hotspot2ConfFriendlyName) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2ConfFriendlyName
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type Hotspot2ConfIcon struct {
-	Name string `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	Name        string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Hotspot2ConfIcon) UnmarshalJSON(b []byte) error {
@@ -237,18 +489,56 @@ func (dst *Hotspot2ConfIcon) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"name": {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src Hotspot2ConfIcon) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2ConfIcon
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type Hotspot2ConfIcons struct {
-	Data     string `json:"data,omitempty"`
-	Filename string `json:"filename,omitempty" validate:"omitempty,gte=1,lte=256"` // .{1,256}
-	Height   int    `json:"height,omitempty"`
-	Language string `json:"language,omitempty"`                                 // [a-z]{3}
-	Media    string `json:"media,omitempty" validate:"omitempty,gte=1,lte=256"` // .{1,256}
-	Name     string `json:"name,omitempty" validate:"omitempty,gte=1,lte=256"`  // .{1,256}
-	Size     int    `json:"size,omitempty"`
-	Width    int    `json:"width,omitempty"`
+	Data        string                     `json:"data,omitempty"`
+	Filename    string                     `json:"filename,omitempty" validate:"omitempty,gte=1,lte=256"` // .{1,256}
+	Height      int                        `json:"height,omitempty"`
+	Language    string                     `json:"language,omitempty"`                                 // [a-z]{3}
+	Media       string                     `json:"media,omitempty" validate:"omitempty,gte=1,lte=256"` // .{1,256}
+	Name        string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=256"`  // .{1,256}
+	Size        int                        `json:"size,omitempty"`
+	Width       int                        `json:"width,omitempty"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Hotspot2ConfIcons) UnmarshalJSON(b []byte) error {
@@ -271,16 +561,61 @@ func (dst *Hotspot2ConfIcons) UnmarshalJSON(b []byte) error {
 	dst.Size = int(aux.Size)
 	dst.Width = int(aux.Width)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"data":     {},
+			"filename": {},
+			"height":   {},
+			"language": {},
+			"media":    {},
+			"name":     {},
+			"size":     {},
+			"width":    {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src Hotspot2ConfIcons) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2ConfIcons
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type Hotspot2ConfNaiRealmList struct {
-	AuthIDs   string `json:"auth_ids,omitempty"`
-	AuthVals  string `json:"auth_vals,omitempty"`
-	EapMethod int    `json:"eap_method,omitempty" validate:"omitempty,oneof=13 21 18 23 50"` // 13|21|18|23|50
-	Encoding  int    `json:"encoding,omitempty" validate:"omitempty,oneof=0 1"`              // 0|1
-	Name      string `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"`              // .{1,128}
-	Status    bool   `json:"status"`
+	AuthIDs     string                     `json:"auth_ids,omitempty"`
+	AuthVals    string                     `json:"auth_vals,omitempty"`
+	EapMethod   int                        `json:"eap_method,omitempty" validate:"omitempty,oneof=13 21 18 23 50"` // 13|21|18|23|50
+	Encoding    int                        `json:"encoding,omitempty" validate:"omitempty,oneof=0 1"`              // 0|1
+	Name        string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"`              // .{1,128}
+	Status      bool                       `json:"status"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Hotspot2ConfNaiRealmList) UnmarshalJSON(b []byte) error {
@@ -301,7 +636,49 @@ func (dst *Hotspot2ConfNaiRealmList) UnmarshalJSON(b []byte) error {
 	dst.EapMethod = int(aux.EapMethod)
 	dst.Encoding = int(aux.Encoding)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"auth_ids":   {},
+			"auth_vals":  {},
+			"eap_method": {},
+			"encoding":   {},
+			"name":       {},
+			"status":     {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src Hotspot2ConfNaiRealmList) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2ConfNaiRealmList
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 type Hotspot2ConfOsu struct {
@@ -314,6 +691,7 @@ type Hotspot2ConfOsu struct {
 	Nai2             string                     `json:"nai2,omitempty"`
 	OperatingClass   string                     `json:"operating_class,omitempty"` // [0-9A-Fa-f]{12}
 	ServerUri        string                     `json:"server_uri,omitempty"`
+	ExtraFields      map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Hotspot2ConfOsu) UnmarshalJSON(b []byte) error {
@@ -329,12 +707,58 @@ func (dst *Hotspot2ConfOsu) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"description":         {},
+			"friendly_name":       {},
+			"icon":                {},
+			"method_oma_dm":       {},
+			"method_soap_xml_spp": {},
+			"nai":                 {},
+			"nai2":                {},
+			"operating_class":     {},
+			"server_uri":          {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src Hotspot2ConfOsu) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2ConfOsu
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type Hotspot2ConfQOSMapDcsp struct {
-	High int `json:"high,omitempty"`
-	Low  int `json:"low,omitempty"`
+	High        int                        `json:"high,omitempty"`
+	Low         int                        `json:"low,omitempty"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Hotspot2ConfQOSMapDcsp) UnmarshalJSON(b []byte) error {
@@ -355,12 +779,51 @@ func (dst *Hotspot2ConfQOSMapDcsp) UnmarshalJSON(b []byte) error {
 	dst.High = int(aux.High)
 	dst.Low = int(aux.Low)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"high": {},
+			"low":  {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src Hotspot2ConfQOSMapDcsp) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2ConfQOSMapDcsp
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type Hotspot2ConfQOSMapExceptions struct {
-	Dcsp int `json:"dcsp,omitempty"`
-	Up   int `json:"up,omitempty"` // [0-7]
+	Dcsp        int                        `json:"dcsp,omitempty"`
+	Up          int                        `json:"up,omitempty"` // [0-7]
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Hotspot2ConfQOSMapExceptions) UnmarshalJSON(b []byte) error {
@@ -381,12 +844,51 @@ func (dst *Hotspot2ConfQOSMapExceptions) UnmarshalJSON(b []byte) error {
 	dst.Dcsp = int(aux.Dcsp)
 	dst.Up = int(aux.Up)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"dcsp": {},
+			"up":   {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src Hotspot2ConfQOSMapExceptions) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2ConfQOSMapExceptions
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type Hotspot2ConfRoamingConsortiumList struct {
-	Name string `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
-	Oid  string `json:"oid,omitempty" validate:"omitempty,gte=1,lte=128"`  // .{1,128}
+	Name        string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	Oid         string                     `json:"oid,omitempty" validate:"omitempty,gte=1,lte=128"`  // .{1,128}
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Hotspot2ConfRoamingConsortiumList) UnmarshalJSON(b []byte) error {
@@ -402,13 +904,52 @@ func (dst *Hotspot2ConfRoamingConsortiumList) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"name": {},
+			"oid":  {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src Hotspot2ConfRoamingConsortiumList) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2ConfRoamingConsortiumList
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type Hotspot2ConfVenueName struct {
-	Language string `json:"language,omitempty"` // [a-z]{3}
-	Name     string `json:"name,omitempty"`
-	Url      string `json:"url,omitempty"`
+	Language    string                     `json:"language,omitempty"` // [a-z]{3}
+	Name        string                     `json:"name,omitempty"`
+	Url         string                     `json:"url,omitempty"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Hotspot2ConfVenueName) UnmarshalJSON(b []byte) error {
@@ -424,7 +965,46 @@ func (dst *Hotspot2ConfVenueName) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"language": {},
+			"name":     {},
+			"url":      {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src Hotspot2ConfVenueName) MarshalJSON() ([]byte, error) {
+	type Alias Hotspot2ConfVenueName
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listHotspot2Conf(ctx context.Context, site string) ([]Hotspot2Conf, error) {

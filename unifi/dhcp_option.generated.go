@@ -25,11 +25,12 @@ type DHCPOption struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Code   string `json:"code,omitempty"` // ^(?!(?:15|42|43|44|51|66|67|252)$)([7-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4])$
-	Name   string `json:"name,omitempty"` // ^[A-Za-z0-9-_]{1,25}$
-	Signed bool   `json:"signed"`
-	Type   string `json:"type,omitempty" validate:"omitempty,oneof=boolean hexarray integer ipaddress macaddress text"` // ^(boolean|hexarray|integer|ipaddress|macaddress|text)$
-	Width  int    `json:"width,omitempty" validate:"omitempty,oneof=8 16 32"`                                           // ^(8|16|32)$
+	Code        string                     `json:"code,omitempty"` // ^(?!(?:15|42|43|44|51|66|67|252)$)([7-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4])$
+	Name        string                     `json:"name,omitempty"` // ^[A-Za-z0-9-_]{1,25}$
+	Signed      bool                       `json:"signed"`
+	Type        string                     `json:"type,omitempty" validate:"omitempty,oneof=boolean hexarray integer ipaddress macaddress text"` // ^(boolean|hexarray|integer|ipaddress|macaddress|text)$
+	Width       int                        `json:"width,omitempty" validate:"omitempty,oneof=8 16 32"`                                           // ^(8|16|32)$
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *DHCPOption) UnmarshalJSON(b []byte) error {
@@ -48,7 +49,54 @@ func (dst *DHCPOption) UnmarshalJSON(b []byte) error {
 	}
 	dst.Width = int(aux.Width)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":            {},
+			"site_id":        {},
+			"attr_hidden":    {},
+			"attr_hidden_id": {},
+			"attr_no_delete": {},
+			"attr_no_edit":   {},
+			"code":           {},
+			"name":           {},
+			"signed":         {},
+			"type":           {},
+			"width":          {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src DHCPOption) MarshalJSON() ([]byte, error) {
+	type Alias DHCPOption
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listDHCPOption(ctx context.Context, site string) ([]DHCPOption, error) {

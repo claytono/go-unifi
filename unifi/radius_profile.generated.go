@@ -42,6 +42,7 @@ type RADIUSProfile struct {
 	XClientPrivateKey         string                     `json:"x_client_private_key,omitempty"`
 	XClientPrivateKeyFilename string                     `json:"x_client_private_key_filename,omitempty"`
 	XClientPrivateKeyPassword string                     `json:"x_client_private_key_password,omitempty"`
+	ExtraFields               map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *RADIUSProfile) UnmarshalJSON(b []byte) error {
@@ -60,13 +61,73 @@ func (dst *RADIUSProfile) UnmarshalJSON(b []byte) error {
 	}
 	dst.InterimUpdateInterval = int(aux.InterimUpdateInterval)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":                           {},
+			"site_id":                       {},
+			"attr_hidden":                   {},
+			"attr_hidden_id":                {},
+			"attr_no_delete":                {},
+			"attr_no_edit":                  {},
+			"accounting_enabled":            {},
+			"acct_servers":                  {},
+			"auth_servers":                  {},
+			"interim_update_enabled":        {},
+			"interim_update_interval":       {},
+			"name":                          {},
+			"tls_enabled":                   {},
+			"use_usg_acct_server":           {},
+			"use_usg_auth_server":           {},
+			"vlan_enabled":                  {},
+			"vlan_wlan_mode":                {},
+			"x_ca_crts":                     {},
+			"x_client_crt":                  {},
+			"x_client_crt_filename":         {},
+			"x_client_private_key":          {},
+			"x_client_private_key_filename": {},
+			"x_client_private_key_password": {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src RADIUSProfile) MarshalJSON() ([]byte, error) {
+	type Alias RADIUSProfile
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type RADIUSProfileAcctServers struct {
-	IP      string `json:"ip,omitempty" validate:"omitempty,ipv4"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
-	Port    int    `json:"port,omitempty"`                         // ^([1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5])$|^$
-	XSecret string `json:"x_secret,omitempty"`
+	IP          string                     `json:"ip,omitempty" validate:"omitempty,ipv4"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
+	Port        int                        `json:"port,omitempty"`                         // ^([1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5])$|^$
+	XSecret     string                     `json:"x_secret,omitempty"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *RADIUSProfileAcctServers) UnmarshalJSON(b []byte) error {
@@ -85,13 +146,53 @@ func (dst *RADIUSProfileAcctServers) UnmarshalJSON(b []byte) error {
 	}
 	dst.Port = int(aux.Port)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"ip":       {},
+			"port":     {},
+			"x_secret": {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src RADIUSProfileAcctServers) MarshalJSON() ([]byte, error) {
+	type Alias RADIUSProfileAcctServers
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type RADIUSProfileAuthServers struct {
-	IP      string `json:"ip,omitempty" validate:"omitempty,ipv4"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
-	Port    int    `json:"port,omitempty"`                         // ^([1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5])$|^$
-	XSecret string `json:"x_secret,omitempty"`
+	IP          string                     `json:"ip,omitempty" validate:"omitempty,ipv4"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
+	Port        int                        `json:"port,omitempty"`                         // ^([1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5])$|^$
+	XSecret     string                     `json:"x_secret,omitempty"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *RADIUSProfileAuthServers) UnmarshalJSON(b []byte) error {
@@ -110,12 +211,52 @@ func (dst *RADIUSProfileAuthServers) UnmarshalJSON(b []byte) error {
 	}
 	dst.Port = int(aux.Port)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"ip":       {},
+			"port":     {},
+			"x_secret": {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src RADIUSProfileAuthServers) MarshalJSON() ([]byte, error) {
+	type Alias RADIUSProfileAuthServers
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type RADIUSProfileXCaCrts struct {
-	Filename string `json:"filename,omitempty"`
-	XCaCrt   string `json:"x_ca_crt,omitempty"`
+	Filename    string                     `json:"filename,omitempty"`
+	XCaCrt      string                     `json:"x_ca_crt,omitempty"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *RADIUSProfileXCaCrts) UnmarshalJSON(b []byte) error {
@@ -131,7 +272,45 @@ func (dst *RADIUSProfileXCaCrts) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"filename": {},
+			"x_ca_crt": {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src RADIUSProfileXCaCrts) MarshalJSON() ([]byte, error) {
+	type Alias RADIUSProfileXCaCrts
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listRADIUSProfile(ctx context.Context, site string) ([]RADIUSProfile, error) {

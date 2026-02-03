@@ -29,7 +29,8 @@ type SettingUsw struct {
 
 	Key string `json:"key"`
 
-	DHCPSnoop bool `json:"dhcp_snoop"`
+	DHCPSnoop   bool                       `json:"dhcp_snoop"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *SettingUsw) UnmarshalJSON(b []byte) error {
@@ -45,7 +46,51 @@ func (dst *SettingUsw) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":            {},
+			"site_id":        {},
+			"attr_hidden":    {},
+			"attr_hidden_id": {},
+			"attr_no_delete": {},
+			"attr_no_edit":   {},
+			"key":            {},
+			"dhcp_snoop":     {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src SettingUsw) MarshalJSON() ([]byte, error) {
+	type Alias SettingUsw
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 // GetSettingUsw Experimental! This function is not yet stable and may change in the future.

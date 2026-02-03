@@ -25,19 +25,20 @@ type Map struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Lat        string  `json:"lat,omitempty"`                                                         // ^([-]?[\d]+[.]?[\d]*([eE][-+]?[\d]+)?)$
-	Lng        string  `json:"lng,omitempty"`                                                         // ^([-]?[\d]+[.]?[\d]*([eE][-+]?[\d]+)?)$
-	MapTypeID  string  `json:"mapTypeId" validate:"omitempty,oneof=satellite roadmap hybrid terrain"` // satellite|roadmap|hybrid|terrain
-	Name       string  `json:"name,omitempty"`
-	OffsetLeft float64 `json:"offset_left,omitempty"`
-	OffsetTop  float64 `json:"offset_top,omitempty"`
-	Opacity    float64 `json:"opacity,omitempty"` // ^(0(\.[\d]{1,2})?|1)$|^$
-	Selected   bool    `json:"selected"`
-	Tilt       int     `json:"tilt,omitempty"`
-	Type       string  `json:"type,omitempty" validate:"omitempty,oneof=designerMap imageMap googleMap"` // designerMap|imageMap|googleMap
-	Unit       string  `json:"unit,omitempty" validate:"omitempty,oneof=m f"`                            // m|f
-	Upp        float64 `json:"upp,omitempty"`
-	Zoom       int     `json:"zoom,omitempty"`
+	Lat         string                     `json:"lat,omitempty"`                                                         // ^([-]?[\d]+[.]?[\d]*([eE][-+]?[\d]+)?)$
+	Lng         string                     `json:"lng,omitempty"`                                                         // ^([-]?[\d]+[.]?[\d]*([eE][-+]?[\d]+)?)$
+	MapTypeID   string                     `json:"mapTypeId" validate:"omitempty,oneof=satellite roadmap hybrid terrain"` // satellite|roadmap|hybrid|terrain
+	Name        string                     `json:"name,omitempty"`
+	OffsetLeft  float64                    `json:"offset_left,omitempty"`
+	OffsetTop   float64                    `json:"offset_top,omitempty"`
+	Opacity     float64                    `json:"opacity,omitempty"` // ^(0(\.[\d]{1,2})?|1)$|^$
+	Selected    bool                       `json:"selected"`
+	Tilt        int                        `json:"tilt,omitempty"`
+	Type        string                     `json:"type,omitempty" validate:"omitempty,oneof=designerMap imageMap googleMap"` // designerMap|imageMap|googleMap
+	Unit        string                     `json:"unit,omitempty" validate:"omitempty,oneof=m f"`                            // m|f
+	Upp         float64                    `json:"upp,omitempty"`
+	Zoom        int                        `json:"zoom,omitempty"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Map) UnmarshalJSON(b []byte) error {
@@ -58,7 +59,62 @@ func (dst *Map) UnmarshalJSON(b []byte) error {
 	dst.Tilt = int(aux.Tilt)
 	dst.Zoom = int(aux.Zoom)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":            {},
+			"site_id":        {},
+			"attr_hidden":    {},
+			"attr_hidden_id": {},
+			"attr_no_delete": {},
+			"attr_no_edit":   {},
+			"lat":            {},
+			"lng":            {},
+			"mapTypeId":      {},
+			"name":           {},
+			"offset_left":    {},
+			"offset_top":     {},
+			"opacity":        {},
+			"selected":       {},
+			"tilt":           {},
+			"type":           {},
+			"unit":           {},
+			"upp":            {},
+			"zoom":           {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src Map) MarshalJSON() ([]byte, error) {
+	type Alias Map
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listMap(ctx context.Context, site string) ([]Map, error) {

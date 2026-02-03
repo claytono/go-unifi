@@ -39,6 +39,7 @@ type PortForward struct {
 	SrcFirewallGroupID string                      `json:"src_firewall_group_id"`
 	SrcLimitingEnabled bool                        `json:"src_limiting_enabled"`
 	SrcLimitingType    string                      `json:"src_limiting_type,omitempty" validate:"omitempty,oneof=ip firewall_group"` // ip|firewall_group
+	ExtraFields        map[string]json.RawMessage  `json:"-"`
 }
 
 func (dst *PortForward) UnmarshalJSON(b []byte) error {
@@ -54,12 +55,69 @@ func (dst *PortForward) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":                   {},
+			"site_id":               {},
+			"attr_hidden":           {},
+			"attr_hidden_id":        {},
+			"attr_no_delete":        {},
+			"attr_no_edit":          {},
+			"destination_ip":        {},
+			"destination_ips":       {},
+			"dst_port":              {},
+			"enabled":               {},
+			"fwd":                   {},
+			"fwd_port":              {},
+			"log":                   {},
+			"name":                  {},
+			"pfwd_interface":        {},
+			"proto":                 {},
+			"src":                   {},
+			"src_firewall_group_id": {},
+			"src_limiting_enabled":  {},
+			"src_limiting_type":     {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src PortForward) MarshalJSON() ([]byte, error) {
+	type Alias PortForward
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type PortForwardDestinationIPs struct {
-	DestinationIP string `json:"destination_ip,omitempty"`                                // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^any$
-	Interface     string `json:"interface,omitempty" validate:"omitempty,oneof=wan wan2"` // wan|wan2
+	DestinationIP string                     `json:"destination_ip,omitempty"`                                // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^any$
+	Interface     string                     `json:"interface,omitempty" validate:"omitempty,oneof=wan wan2"` // wan|wan2
+	ExtraFields   map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *PortForwardDestinationIPs) UnmarshalJSON(b []byte) error {
@@ -75,7 +133,45 @@ func (dst *PortForwardDestinationIPs) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"destination_ip": {},
+			"interface":      {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src PortForwardDestinationIPs) MarshalJSON() ([]byte, error) {
+	type Alias PortForwardDestinationIPs
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listPortForward(ctx context.Context, site string) ([]PortForward, error) {

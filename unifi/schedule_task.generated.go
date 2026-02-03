@@ -30,6 +30,7 @@ type ScheduleTask struct {
 	ExecuteOnlyOnce bool                         `json:"execute_only_once"`
 	Name            string                       `json:"name,omitempty"`
 	UpgradeTargets  []ScheduleTaskUpgradeTargets `json:"upgrade_targets,omitempty"`
+	ExtraFields     map[string]json.RawMessage   `json:"-"`
 }
 
 func (dst *ScheduleTask) UnmarshalJSON(b []byte) error {
@@ -45,11 +46,59 @@ func (dst *ScheduleTask) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":               {},
+			"site_id":           {},
+			"attr_hidden":       {},
+			"attr_hidden_id":    {},
+			"attr_no_delete":    {},
+			"attr_no_edit":      {},
+			"action":            {},
+			"cron_expr":         {},
+			"execute_only_once": {},
+			"name":              {},
+			"upgrade_targets":   {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src ScheduleTask) MarshalJSON() ([]byte, error) {
+	type Alias ScheduleTask
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type ScheduleTaskUpgradeTargets struct {
-	MAC string `json:"mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
+	MAC         string                     `json:"mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *ScheduleTaskUpgradeTargets) UnmarshalJSON(b []byte) error {
@@ -65,7 +114,44 @@ func (dst *ScheduleTaskUpgradeTargets) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"mac": {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src ScheduleTaskUpgradeTargets) MarshalJSON() ([]byte, error) {
+	type Alias ScheduleTaskUpgradeTargets
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listScheduleTask(ctx context.Context, site string) ([]ScheduleTask, error) {

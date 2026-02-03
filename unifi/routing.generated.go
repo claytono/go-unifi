@@ -25,16 +25,17 @@ type Routing struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Enabled              bool   `json:"enabled"`
-	GatewayDevice        string `json:"gateway_device,omitempty" validate:"omitempty,mac"`                                              // ^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$
-	GatewayType          string `json:"gateway_type,omitempty" validate:"omitempty,oneof=default switch"`                               // default|switch
-	Name                 string `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"`                                              // .{1,128}
-	StaticRouteDistance  int    `json:"static-route_distance,omitempty"`                                                                // ^[1-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]$|^$
-	StaticRouteInterface string `json:"static-route_interface"`                                                                         // WAN1|WAN2|[\d\w]+|^$
-	StaticRouteNetwork   string `json:"static-route_network,omitempty"`                                                                 // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\/([1-9]|[1-2][0-9]|3[0-2])$|^([a-fA-F0-9:]+\/(([1-9]|[1-8][0-9]|9[0-9]|1[01][0-9]|12[0-8])))$
-	StaticRouteNexthop   string `json:"static-route_nexthop"`                                                                           // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([1-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^([a-fA-F0-9:]+)$|^$
-	StaticRouteType      string `json:"static-route_type,omitempty" validate:"omitempty,oneof=nexthop-route interface-route blackhole"` // nexthop-route|interface-route|blackhole
-	Type                 string `json:"type,omitempty"`                                                                                 // static-route
+	Enabled              bool                       `json:"enabled"`
+	GatewayDevice        string                     `json:"gateway_device,omitempty" validate:"omitempty,mac"`                                              // ^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$
+	GatewayType          string                     `json:"gateway_type,omitempty" validate:"omitempty,oneof=default switch"`                               // default|switch
+	Name                 string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"`                                              // .{1,128}
+	StaticRouteDistance  int                        `json:"static-route_distance,omitempty"`                                                                // ^[1-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]$|^$
+	StaticRouteInterface string                     `json:"static-route_interface"`                                                                         // WAN1|WAN2|[\d\w]+|^$
+	StaticRouteNetwork   string                     `json:"static-route_network,omitempty"`                                                                 // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\/([1-9]|[1-2][0-9]|3[0-2])$|^([a-fA-F0-9:]+\/(([1-9]|[1-8][0-9]|9[0-9]|1[01][0-9]|12[0-8])))$
+	StaticRouteNexthop   string                     `json:"static-route_nexthop"`                                                                           // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([1-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^([a-fA-F0-9:]+)$|^$
+	StaticRouteType      string                     `json:"static-route_type,omitempty" validate:"omitempty,oneof=nexthop-route interface-route blackhole"` // nexthop-route|interface-route|blackhole
+	Type                 string                     `json:"type,omitempty"`                                                                                 // static-route
+	ExtraFields          map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Routing) UnmarshalJSON(b []byte) error {
@@ -53,7 +54,59 @@ func (dst *Routing) UnmarshalJSON(b []byte) error {
 	}
 	dst.StaticRouteDistance = int(aux.StaticRouteDistance)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":                    {},
+			"site_id":                {},
+			"attr_hidden":            {},
+			"attr_hidden_id":         {},
+			"attr_no_delete":         {},
+			"attr_no_edit":           {},
+			"enabled":                {},
+			"gateway_device":         {},
+			"gateway_type":           {},
+			"name":                   {},
+			"static-route_distance":  {},
+			"static-route_interface": {},
+			"static-route_network":   {},
+			"static-route_nexthop":   {},
+			"static-route_type":      {},
+			"type":                   {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src Routing) MarshalJSON() ([]byte, error) {
+	type Alias Routing
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listRouting(ctx context.Context, site string) ([]Routing, error) {

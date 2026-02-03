@@ -25,14 +25,15 @@ type DNSRecord struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Enabled    bool   `json:"enabled"`
-	Key        string `json:"key,omitempty" validate:"omitempty,gte=1,lte=256"`                                    // .{1,256}
-	Port       int    `json:"port,omitempty"`                                                                      // ^[0-9][0-9]?$|^
-	Priority   int    `json:"priority,omitempty"`                                                                  // ^[0-9][0-9]?$|^
-	RecordType string `json:"record_type,omitempty" validate:"omitempty,oneof=A AAAA CNAME MX NS PTR SOA SRV TXT"` // A|AAAA|CNAME|MX|NS|PTR|SOA|SRV|TXT
-	Ttl        int    `json:"ttl,omitempty"`                                                                       // ^[0-9][0-9]?$|^
-	Value      string `json:"value,omitempty" validate:"omitempty,gte=1,lte=256"`                                  // .{1,256}
-	Weight     int    `json:"weight,omitempty"`                                                                    // ^[0-9][0-9]?$|^
+	Enabled     bool                       `json:"enabled"`
+	Key         string                     `json:"key,omitempty" validate:"omitempty,gte=1,lte=256"`                                    // .{1,256}
+	Port        int                        `json:"port,omitempty"`                                                                      // ^[0-9][0-9]?$|^
+	Priority    int                        `json:"priority,omitempty"`                                                                  // ^[0-9][0-9]?$|^
+	RecordType  string                     `json:"record_type,omitempty" validate:"omitempty,oneof=A AAAA CNAME MX NS PTR SOA SRV TXT"` // A|AAAA|CNAME|MX|NS|PTR|SOA|SRV|TXT
+	Ttl         int                        `json:"ttl,omitempty"`                                                                       // ^[0-9][0-9]?$|^
+	Value       string                     `json:"value,omitempty" validate:"omitempty,gte=1,lte=256"`                                  // .{1,256}
+	Weight      int                        `json:"weight,omitempty"`                                                                    // ^[0-9][0-9]?$|^
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *DNSRecord) UnmarshalJSON(b []byte) error {
@@ -57,7 +58,57 @@ func (dst *DNSRecord) UnmarshalJSON(b []byte) error {
 	dst.Ttl = int(aux.Ttl)
 	dst.Weight = int(aux.Weight)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":            {},
+			"site_id":        {},
+			"attr_hidden":    {},
+			"attr_hidden_id": {},
+			"attr_no_delete": {},
+			"attr_no_edit":   {},
+			"enabled":        {},
+			"key":            {},
+			"port":           {},
+			"priority":       {},
+			"record_type":    {},
+			"ttl":            {},
+			"value":          {},
+			"weight":         {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src DNSRecord) MarshalJSON() ([]byte, error) {
+	type Alias DNSRecord
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listDNSRecord(ctx context.Context, site string) ([]DNSRecord, error) {

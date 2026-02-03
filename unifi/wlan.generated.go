@@ -117,6 +117,7 @@ type WLAN struct {
 	XIappKey                    string                     `json:"x_iapp_key,omitempty"`                                                           // [0-9A-Fa-f]{32}
 	XPassphrase                 string                     `json:"x_passphrase,omitempty"`                                                         // [\x20-\x7E]{8,255}|[0-9a-fA-F]{64}
 	XWEP                        string                     `json:"x_wep,omitempty"`
+	ExtraFields                 map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *WLAN) UnmarshalJSON(b []byte) error {
@@ -160,13 +161,148 @@ func (dst *WLAN) UnmarshalJSON(b []byte) error {
 	dst.VLAN = int(aux.VLAN)
 	dst.WEPIDX = int(aux.WEPIDX)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":                            {},
+			"site_id":                        {},
+			"attr_hidden":                    {},
+			"attr_hidden_id":                 {},
+			"attr_no_delete":                 {},
+			"attr_no_edit":                   {},
+			"ap_group_ids":                   {},
+			"ap_group_mode":                  {},
+			"auth_cache":                     {},
+			"b_supported":                    {},
+			"bc_filter_enabled":              {},
+			"bc_filter_list":                 {},
+			"bss_transition":                 {},
+			"country_beacon":                 {},
+			"dpi_enabled":                    {},
+			"dpigroup_id":                    {},
+			"dtim_6e":                        {},
+			"dtim_mode":                      {},
+			"dtim_na":                        {},
+			"dtim_ng":                        {},
+			"element_adopt":                  {},
+			"enabled":                        {},
+			"enhanced_iot":                   {},
+			"fast_roaming_enabled":           {},
+			"group_rekey":                    {},
+			"hide_ssid":                      {},
+			"hotspot2":                       {},
+			"hotspot2conf_enabled":           {},
+			"iapp_enabled":                   {},
+			"is_guest":                       {},
+			"l2_isolation":                   {},
+			"log_level":                      {},
+			"mac_filter_enabled":             {},
+			"mac_filter_list":                {},
+			"mac_filter_policy":              {},
+			"minrate_na_advertising_rates":   {},
+			"minrate_na_data_rate_kbps":      {},
+			"minrate_na_enabled":             {},
+			"minrate_ng_advertising_rates":   {},
+			"minrate_ng_data_rate_kbps":      {},
+			"minrate_ng_enabled":             {},
+			"minrate_setting_preference":     {},
+			"mlo_enabled":                    {},
+			"mcastenhance_enabled":           {},
+			"name":                           {},
+			"name_combine_enabled":           {},
+			"name_combine_suffix":            {},
+			"nas_identifier":                 {},
+			"nas_identifier_type":            {},
+			"networkconf_id":                 {},
+			"no2ghz_oui":                     {},
+			"optimize_iot_wifi_connectivity": {},
+			"p2p":                            {},
+			"p2p_cross_connect":              {},
+			"pmf_cipher":                     {},
+			"pmf_mode":                       {},
+			"priority":                       {},
+			"private_preshared_keys":         {},
+			"private_preshared_keys_enabled": {},
+			"proxy_arp":                      {},
+			"radius_das_enabled":             {},
+			"radius_mac_auth_enabled":        {},
+			"radius_macacl_empty_password":   {},
+			"radius_macacl_format":           {},
+			"radiusprofile_id":               {},
+			"roam_cluster_id":                {},
+			"rrm_enabled":                    {},
+			"sae_anti_clogging":              {},
+			"sae_groups":                     {},
+			"sae_psk":                        {},
+			"sae_psk_vlan_required":          {},
+			"sae_sync":                       {},
+			"schedule":                       {},
+			"schedule_enabled":               {},
+			"schedule_reversed":              {},
+			"schedule_with_duration":         {},
+			"security":                       {},
+			"setting_preference":             {},
+			"tdls_prohibit":                  {},
+			"uapsd_enabled":                  {},
+			"uid_workspace_url":              {},
+			"usergroup_id":                   {},
+			"vlan":                           {},
+			"vlan_enabled":                   {},
+			"wep_idx":                        {},
+			"wlan_band":                      {},
+			"wlan_bands":                     {},
+			"wlangroup_id":                   {},
+			"wpa3_enhanced_192":              {},
+			"wpa3_fast_roaming":              {},
+			"wpa3_support":                   {},
+			"wpa3_transition":                {},
+			"wpa_enc":                        {},
+			"wpa_mode":                       {},
+			"wpa_psk_radius":                 {},
+			"x_iapp_key":                     {},
+			"x_passphrase":                   {},
+			"x_wep":                          {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src WLAN) MarshalJSON() ([]byte, error) {
+	type Alias WLAN
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type WLANCapab struct {
-	Port     int    `json:"port,omitempty"`                                                         // ^(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])|$
-	Protocol string `json:"protocol,omitempty" validate:"omitempty,oneof=icmp tcp_udp tcp udp esp"` // icmp|tcp_udp|tcp|udp|esp
-	Status   string `json:"status,omitempty" validate:"omitempty,oneof=closed open unknown"`        // closed|open|unknown
+	Port        int                        `json:"port,omitempty"`                                                         // ^(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])|$
+	Protocol    string                     `json:"protocol,omitempty" validate:"omitempty,oneof=icmp tcp_udp tcp udp esp"` // icmp|tcp_udp|tcp|udp|esp
+	Status      string                     `json:"status,omitempty" validate:"omitempty,oneof=closed open unknown"`        // closed|open|unknown
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *WLANCapab) UnmarshalJSON(b []byte) error {
@@ -185,14 +321,54 @@ func (dst *WLANCapab) UnmarshalJSON(b []byte) error {
 	}
 	dst.Port = int(aux.Port)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"port":     {},
+			"protocol": {},
+			"status":   {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src WLANCapab) MarshalJSON() ([]byte, error) {
+	type Alias WLANCapab
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type WLANCellularNetworkList struct {
-	CountryCode int    `json:"country_code,omitempty"` // [1-9]{1}[0-9]{0,3}
-	Mcc         int    `json:"mcc,omitempty"`
-	Mnc         int    `json:"mnc,omitempty"`
-	Name        string `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	CountryCode int                        `json:"country_code,omitempty"` // [1-9]{1}[0-9]{0,3}
+	Mcc         int                        `json:"mcc,omitempty"`
+	Mnc         int                        `json:"mnc,omitempty"`
+	Name        string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *WLANCellularNetworkList) UnmarshalJSON(b []byte) error {
@@ -215,12 +391,53 @@ func (dst *WLANCellularNetworkList) UnmarshalJSON(b []byte) error {
 	dst.Mcc = int(aux.Mcc)
 	dst.Mnc = int(aux.Mnc)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"country_code": {},
+			"mcc":          {},
+			"mnc":          {},
+			"name":         {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src WLANCellularNetworkList) MarshalJSON() ([]byte, error) {
+	type Alias WLANCellularNetworkList
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type WLANFriendlyName struct {
-	Language string `json:"language,omitempty"`                                // [a-z]{3}
-	Text     string `json:"text,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	Language    string                     `json:"language,omitempty"`                                // [a-z]{3}
+	Text        string                     `json:"text,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *WLANFriendlyName) UnmarshalJSON(b []byte) error {
@@ -236,7 +453,45 @@ func (dst *WLANFriendlyName) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"language": {},
+			"text":     {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src WLANFriendlyName) MarshalJSON() ([]byte, error) {
+	type Alias WLANFriendlyName
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 type WLANHotspot2 struct {
@@ -266,6 +521,7 @@ type WLANHotspot2 struct {
 	VenueGroup              int                         `json:"venue_group,omitempty" validate:"omitempty,oneof=0 1 2 3 4 5 6 7 8 9 10 11"` // 0|1|2|3|4|5|6|7|8|9|10|11
 	VenueName               []WLANVenueName             `json:"venue_name,omitempty"`
 	VenueType               int                         `json:"venue_type,omitempty" validate:"omitempty,oneof=0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15"` // 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15
+	ExtraFields             map[string]json.RawMessage  `json:"-"`
 }
 
 func (dst *WLANHotspot2) UnmarshalJSON(b []byte) error {
@@ -302,16 +558,79 @@ func (dst *WLANHotspot2) UnmarshalJSON(b []byte) error {
 	dst.VenueGroup = int(aux.VenueGroup)
 	dst.VenueType = int(aux.VenueType)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"capab":                      {},
+			"cellular_network_list":      {},
+			"domain_name_list":           {},
+			"friendly_name":              {},
+			"ipaddr_type_avail_v4":       {},
+			"ipaddr_type_avail_v6":       {},
+			"metrics_downlink_load":      {},
+			"metrics_downlink_load_set":  {},
+			"metrics_downlink_speed":     {},
+			"metrics_downlink_speed_set": {},
+			"metrics_info_at_capacity":   {},
+			"metrics_info_link_status":   {},
+			"metrics_info_symmetric":     {},
+			"metrics_measurement":        {},
+			"metrics_measurement_set":    {},
+			"metrics_status":             {},
+			"metrics_uplink_load":        {},
+			"metrics_uplink_load_set":    {},
+			"metrics_uplink_speed":       {},
+			"metrics_uplink_speed_set":   {},
+			"nai_realm_list":             {},
+			"network_type":               {},
+			"roaming_consortium_list":    {},
+			"venue_group":                {},
+			"venue_name":                 {},
+			"venue_type":                 {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src WLANHotspot2) MarshalJSON() ([]byte, error) {
+	type Alias WLANHotspot2
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type WLANNaiRealmList struct {
-	AuthIDs   []int  `json:"auth_ids,omitempty" validate:"omitempty,oneof=0 1 2 3 4 5"`             // 0|1|2|3|4|5
-	AuthVals  []int  `json:"auth_vals,omitempty" validate:"omitempty,oneof=0 1 2 3 4 5 6 7 8 9 10"` // 0|1|2|3|4|5|6|7|8|9|10
-	EapMethod int    `json:"eap_method,omitempty" validate:"omitempty,oneof=13 21 18 23 50"`        // 13|21|18|23|50
-	Encoding  int    `json:"encoding,omitempty" validate:"omitempty,oneof=0 1"`                     // 0|1
-	Name      string `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"`                     // .{1,128}
-	Status    bool   `json:"status"`
+	AuthIDs     []int                      `json:"auth_ids,omitempty" validate:"omitempty,oneof=0 1 2 3 4 5"`             // 0|1|2|3|4|5
+	AuthVals    []int                      `json:"auth_vals,omitempty" validate:"omitempty,oneof=0 1 2 3 4 5 6 7 8 9 10"` // 0|1|2|3|4|5|6|7|8|9|10
+	EapMethod   int                        `json:"eap_method,omitempty" validate:"omitempty,oneof=13 21 18 23 50"`        // 13|21|18|23|50
+	Encoding    int                        `json:"encoding,omitempty" validate:"omitempty,oneof=0 1"`                     // 0|1
+	Name        string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"`                     // .{1,128}
+	Status      bool                       `json:"status"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *WLANNaiRealmList) UnmarshalJSON(b []byte) error {
@@ -342,12 +661,55 @@ func (dst *WLANNaiRealmList) UnmarshalJSON(b []byte) error {
 	dst.EapMethod = int(aux.EapMethod)
 	dst.Encoding = int(aux.Encoding)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"auth_ids":   {},
+			"auth_vals":  {},
+			"eap_method": {},
+			"encoding":   {},
+			"name":       {},
+			"status":     {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src WLANNaiRealmList) MarshalJSON() ([]byte, error) {
+	type Alias WLANNaiRealmList
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type WLANPrivatePresharedKeys struct {
-	NetworkID string `json:"networkconf_id"`
-	Password  string `json:"password,omitempty"` // [\x20-\x7E]{8,255}
+	NetworkID   string                     `json:"networkconf_id"`
+	Password    string                     `json:"password,omitempty"` // [\x20-\x7E]{8,255}
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *WLANPrivatePresharedKeys) UnmarshalJSON(b []byte) error {
@@ -363,12 +725,51 @@ func (dst *WLANPrivatePresharedKeys) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"networkconf_id": {},
+			"password":       {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src WLANPrivatePresharedKeys) MarshalJSON() ([]byte, error) {
+	type Alias WLANPrivatePresharedKeys
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type WLANRoamingConsortiumList struct {
-	Name string `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
-	Oid  string `json:"oid,omitempty" validate:"omitempty,gte=1,lte=128"`  // .{1,128}
+	Name        string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	Oid         string                     `json:"oid,omitempty" validate:"omitempty,gte=1,lte=128"`  // .{1,128}
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *WLANRoamingConsortiumList) UnmarshalJSON(b []byte) error {
@@ -384,14 +785,53 @@ func (dst *WLANRoamingConsortiumList) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"name": {},
+			"oid":  {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src WLANRoamingConsortiumList) MarshalJSON() ([]byte, error) {
+	type Alias WLANRoamingConsortiumList
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type WLANSaePsk struct {
-	ID   string `json:"id" validate:"omitempty,gte=0,lte=128"`  // .{0,128}
-	MAC  string `json:"mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
-	Psk  string `json:"psk,omitempty"`                          // [\x20-\x7E]{8,255}
-	VLAN int    `json:"vlan,omitempty"`                         // [0-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5]|^$
+	ID          string                     `json:"id" validate:"omitempty,gte=0,lte=128"`  // .{0,128}
+	MAC         string                     `json:"mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
+	Psk         string                     `json:"psk,omitempty"`                          // [\x20-\x7E]{8,255}
+	VLAN        int                        `json:"vlan,omitempty"`                         // [0-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5]|^$
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *WLANSaePsk) UnmarshalJSON(b []byte) error {
@@ -410,15 +850,56 @@ func (dst *WLANSaePsk) UnmarshalJSON(b []byte) error {
 	}
 	dst.VLAN = int(aux.VLAN)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"id":   {},
+			"mac":  {},
+			"psk":  {},
+			"vlan": {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src WLANSaePsk) MarshalJSON() ([]byte, error) {
+	type Alias WLANSaePsk
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type WLANScheduleWithDuration struct {
-	DurationMinutes int      `json:"duration_minutes,omitempty" validate:"omitempty,numeric_nonzero"`                     // ^[1-9][0-9]*$
-	Name            string   `json:"name,omitempty"`                                                                      // .*
-	StartDaysOfWeek []string `json:"start_days_of_week,omitempty" validate:"omitempty,oneof=sun mon tue wed thu fri sat"` // ^(sun|mon|tue|wed|thu|fri|sat)$
-	StartHour       int      `json:"start_hour,omitempty"`                                                                // ^(1?[0-9])|(2[0-3])$
-	StartMinute     int      `json:"start_minute,omitempty"`                                                              // ^[0-5]?[0-9]$
+	DurationMinutes int                        `json:"duration_minutes,omitempty" validate:"omitempty,numeric_nonzero"`                     // ^[1-9][0-9]*$
+	Name            string                     `json:"name,omitempty"`                                                                      // .*
+	StartDaysOfWeek []string                   `json:"start_days_of_week,omitempty" validate:"omitempty,oneof=sun mon tue wed thu fri sat"` // ^(sun|mon|tue|wed|thu|fri|sat)$
+	StartHour       int                        `json:"start_hour,omitempty"`                                                                // ^(1?[0-9])|(2[0-3])$
+	StartMinute     int                        `json:"start_minute,omitempty"`                                                              // ^[0-5]?[0-9]$
+	ExtraFields     map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *WLANScheduleWithDuration) UnmarshalJSON(b []byte) error {
@@ -441,13 +922,55 @@ func (dst *WLANScheduleWithDuration) UnmarshalJSON(b []byte) error {
 	dst.StartHour = int(aux.StartHour)
 	dst.StartMinute = int(aux.StartMinute)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"duration_minutes":   {},
+			"name":               {},
+			"start_days_of_week": {},
+			"start_hour":         {},
+			"start_minute":       {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src WLANScheduleWithDuration) MarshalJSON() ([]byte, error) {
+	type Alias WLANScheduleWithDuration
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type WLANVenueName struct {
-	Language string `json:"language,omitempty"` // [a-z]{0,3}
-	Name     string `json:"name,omitempty"`
-	Url      string `json:"url,omitempty"`
+	Language    string                     `json:"language,omitempty"` // [a-z]{0,3}
+	Name        string                     `json:"name,omitempty"`
+	Url         string                     `json:"url,omitempty"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *WLANVenueName) UnmarshalJSON(b []byte) error {
@@ -463,7 +986,46 @@ func (dst *WLANVenueName) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"language": {},
+			"name":     {},
+			"url":      {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src WLANVenueName) MarshalJSON() ([]byte, error) {
+	type Alias WLANVenueName
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listWLAN(ctx context.Context, site string) ([]WLAN, error) {

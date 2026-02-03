@@ -29,15 +29,16 @@ type SettingSuperSmtp struct {
 
 	Key string `json:"key"`
 
-	Enabled   bool   `json:"enabled"`
-	Host      string `json:"host,omitempty"`
-	Port      int    `json:"port,omitempty"` // [1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5]|^$
-	Sender    string `json:"sender,omitempty"`
-	UseAuth   bool   `json:"use_auth"`
-	UseSender bool   `json:"use_sender"`
-	UseSsl    bool   `json:"use_ssl"`
-	Username  string `json:"username,omitempty"`
-	XPassword string `json:"x_password,omitempty"`
+	Enabled     bool                       `json:"enabled"`
+	Host        string                     `json:"host,omitempty"`
+	Port        int                        `json:"port,omitempty"` // [1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5]|^$
+	Sender      string                     `json:"sender,omitempty"`
+	UseAuth     bool                       `json:"use_auth"`
+	UseSender   bool                       `json:"use_sender"`
+	UseSsl      bool                       `json:"use_ssl"`
+	Username    string                     `json:"username,omitempty"`
+	XPassword   string                     `json:"x_password,omitempty"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *SettingSuperSmtp) UnmarshalJSON(b []byte) error {
@@ -56,7 +57,59 @@ func (dst *SettingSuperSmtp) UnmarshalJSON(b []byte) error {
 	}
 	dst.Port = int(aux.Port)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":            {},
+			"site_id":        {},
+			"attr_hidden":    {},
+			"attr_hidden_id": {},
+			"attr_no_delete": {},
+			"attr_no_edit":   {},
+			"key":            {},
+			"enabled":        {},
+			"host":           {},
+			"port":           {},
+			"sender":         {},
+			"use_auth":       {},
+			"use_sender":     {},
+			"use_ssl":        {},
+			"username":       {},
+			"x_password":     {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src SettingSuperSmtp) MarshalJSON() ([]byte, error) {
+	type Alias SettingSuperSmtp
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 // GetSettingSuperSmtp Experimental! This function is not yet stable and may change in the future.

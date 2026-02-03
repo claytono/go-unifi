@@ -29,14 +29,15 @@ type SettingRadius struct {
 
 	Key string `json:"key"`
 
-	AccountingEnabled     bool   `json:"accounting_enabled"`
-	AcctPort              int    `json:"acct_port,omitempty"` // [1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5]
-	AuthPort              int    `json:"auth_port,omitempty"` // [1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5]
-	ConfigureWholeNetwork bool   `json:"configure_whole_network"`
-	Enabled               bool   `json:"enabled"`
-	InterimUpdateInterval int    `json:"interim_update_interval,omitempty"` // ^([6-9][0-9]|[1-9][0-9]{2,3}|[1-7][0-9]{4}|8[0-5][0-9]{3}|86[0-3][0-9][0-9]|86400)$
-	TunneledReply         bool   `json:"tunneled_reply"`
-	XSecret               string `json:"x_secret,omitempty"` // ^[^\\"' ]{1,48}$
+	AccountingEnabled     bool                       `json:"accounting_enabled"`
+	AcctPort              int                        `json:"acct_port,omitempty"` // [1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5]
+	AuthPort              int                        `json:"auth_port,omitempty"` // [1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5]
+	ConfigureWholeNetwork bool                       `json:"configure_whole_network"`
+	Enabled               bool                       `json:"enabled"`
+	InterimUpdateInterval int                        `json:"interim_update_interval,omitempty"` // ^([6-9][0-9]|[1-9][0-9]{2,3}|[1-7][0-9]{4}|8[0-5][0-9]{3}|86[0-3][0-9][0-9]|86400)$
+	TunneledReply         bool                       `json:"tunneled_reply"`
+	XSecret               string                     `json:"x_secret,omitempty"` // ^[^\\"' ]{1,48}$
+	ExtraFields           map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *SettingRadius) UnmarshalJSON(b []byte) error {
@@ -59,7 +60,58 @@ func (dst *SettingRadius) UnmarshalJSON(b []byte) error {
 	dst.AuthPort = int(aux.AuthPort)
 	dst.InterimUpdateInterval = int(aux.InterimUpdateInterval)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":                     {},
+			"site_id":                 {},
+			"attr_hidden":             {},
+			"attr_hidden_id":          {},
+			"attr_no_delete":          {},
+			"attr_no_edit":            {},
+			"key":                     {},
+			"accounting_enabled":      {},
+			"acct_port":               {},
+			"auth_port":               {},
+			"configure_whole_network": {},
+			"enabled":                 {},
+			"interim_update_interval": {},
+			"tunneled_reply":          {},
+			"x_secret":                {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src SettingRadius) MarshalJSON() ([]byte, error) {
+	type Alias SettingRadius
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 // GetSettingRadius Experimental! This function is not yet stable and may change in the future.

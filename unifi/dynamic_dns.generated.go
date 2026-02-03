@@ -25,14 +25,15 @@ type DynamicDNS struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	CustomService string   `json:"custom_service,omitempty"`                                                                                                                                                                                                                                                                               // ^[^"' ]+$
-	HostName      string   `json:"host_name,omitempty"`                                                                                                                                                                                                                                                                                    // ^[^"' ]+$
-	Interface     string   `json:"interface,omitempty" validate:"omitempty,oneof=wan wan2"`                                                                                                                                                                                                                                                // wan|wan2
-	Login         string   `json:"login,omitempty"`                                                                                                                                                                                                                                                                                        // ^[^"' ]+$
-	Options       []string `json:"options,omitempty"`                                                                                                                                                                                                                                                                                      // ^[^"' ]+$
-	Server        string   `json:"server"`                                                                                                                                                                                                                                                                                                 // ^[^"' ]+$|^$
-	Service       string   `json:"service,omitempty" validate:"omitempty,oneof=afraid changeip cloudflare cloudxns ddnss dhis dnsexit dnsomatic dnspark dnspod dslreports dtdns duckdns duiadns dyn dyndns dynv6 easydns freemyip googledomains loopia namecheap noip nsupdate ovh sitelutions spdyn strato tunnelbroker zoneedit custom"` // afraid|changeip|cloudflare|cloudxns|ddnss|dhis|dnsexit|dnsomatic|dnspark|dnspod|dslreports|dtdns|duckdns|duiadns|dyn|dyndns|dynv6|easydns|freemyip|googledomains|loopia|namecheap|noip|nsupdate|ovh|sitelutions|spdyn|strato|tunnelbroker|zoneedit|custom
-	XPassword     string   `json:"x_password,omitempty"`                                                                                                                                                                                                                                                                                   // ^[^"' ]+$
+	CustomService string                     `json:"custom_service,omitempty"`                                                                                                                                                                                                                                                                               // ^[^"' ]+$
+	HostName      string                     `json:"host_name,omitempty"`                                                                                                                                                                                                                                                                                    // ^[^"' ]+$
+	Interface     string                     `json:"interface,omitempty" validate:"omitempty,oneof=wan wan2"`                                                                                                                                                                                                                                                // wan|wan2
+	Login         string                     `json:"login,omitempty"`                                                                                                                                                                                                                                                                                        // ^[^"' ]+$
+	Options       []string                   `json:"options,omitempty"`                                                                                                                                                                                                                                                                                      // ^[^"' ]+$
+	Server        string                     `json:"server"`                                                                                                                                                                                                                                                                                                 // ^[^"' ]+$|^$
+	Service       string                     `json:"service,omitempty" validate:"omitempty,oneof=afraid changeip cloudflare cloudxns ddnss dhis dnsexit dnsomatic dnspark dnspod dslreports dtdns duckdns duiadns dyn dyndns dynv6 easydns freemyip googledomains loopia namecheap noip nsupdate ovh sitelutions spdyn strato tunnelbroker zoneedit custom"` // afraid|changeip|cloudflare|cloudxns|ddnss|dhis|dnsexit|dnsomatic|dnspark|dnspod|dslreports|dtdns|duckdns|duiadns|dyn|dyndns|dynv6|easydns|freemyip|googledomains|loopia|namecheap|noip|nsupdate|ovh|sitelutions|spdyn|strato|tunnelbroker|zoneedit|custom
+	XPassword     string                     `json:"x_password,omitempty"`                                                                                                                                                                                                                                                                                   // ^[^"' ]+$
+	ExtraFields   map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *DynamicDNS) UnmarshalJSON(b []byte) error {
@@ -48,7 +49,57 @@ func (dst *DynamicDNS) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":            {},
+			"site_id":        {},
+			"attr_hidden":    {},
+			"attr_hidden_id": {},
+			"attr_no_delete": {},
+			"attr_no_edit":   {},
+			"custom_service": {},
+			"host_name":      {},
+			"interface":      {},
+			"login":          {},
+			"options":        {},
+			"server":         {},
+			"service":        {},
+			"x_password":     {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src DynamicDNS) MarshalJSON() ([]byte, error) {
+	type Alias DynamicDNS
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listDynamicDNS(ctx context.Context, site string) ([]DynamicDNS, error) {

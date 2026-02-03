@@ -29,12 +29,13 @@ type SettingBroadcast struct {
 
 	Key string `json:"key"`
 
-	SoundAfterEnabled   bool   `json:"sound_after_enabled"`
-	SoundAfterResource  string `json:"sound_after_resource,omitempty"`
-	SoundAfterType      string `json:"sound_after_type,omitempty" validate:"omitempty,oneof=sample media"` // sample|media
-	SoundBeforeEnabled  bool   `json:"sound_before_enabled"`
-	SoundBeforeResource string `json:"sound_before_resource,omitempty"`
-	SoundBeforeType     string `json:"sound_before_type,omitempty" validate:"omitempty,oneof=sample media"` // sample|media
+	SoundAfterEnabled   bool                       `json:"sound_after_enabled"`
+	SoundAfterResource  string                     `json:"sound_after_resource,omitempty"`
+	SoundAfterType      string                     `json:"sound_after_type,omitempty" validate:"omitempty,oneof=sample media"` // sample|media
+	SoundBeforeEnabled  bool                       `json:"sound_before_enabled"`
+	SoundBeforeResource string                     `json:"sound_before_resource,omitempty"`
+	SoundBeforeType     string                     `json:"sound_before_type,omitempty" validate:"omitempty,oneof=sample media"` // sample|media
+	ExtraFields         map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *SettingBroadcast) UnmarshalJSON(b []byte) error {
@@ -50,7 +51,56 @@ func (dst *SettingBroadcast) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":                   {},
+			"site_id":               {},
+			"attr_hidden":           {},
+			"attr_hidden_id":        {},
+			"attr_no_delete":        {},
+			"attr_no_edit":          {},
+			"key":                   {},
+			"sound_after_enabled":   {},
+			"sound_after_resource":  {},
+			"sound_after_type":      {},
+			"sound_before_enabled":  {},
+			"sound_before_resource": {},
+			"sound_before_type":     {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src SettingBroadcast) MarshalJSON() ([]byte, error) {
+	type Alias SettingBroadcast
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 // GetSettingBroadcast Experimental! This function is not yet stable and may change in the future.

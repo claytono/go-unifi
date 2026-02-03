@@ -25,16 +25,17 @@ type Account struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	FilterIDs        []string `json:"filter_ids,omitempty"`
-	IP               string   `json:"ip,omitempty" validate:"omitempty,ipv4"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^$
-	Name             string   `json:"name,omitempty"`                         // ^[^"' ]+$
-	NetworkID        string   `json:"networkconf_id,omitempty"`
-	TunnelConfigType string   `json:"tunnel_config_type,omitempty" validate:"omitempty,oneof=vpn 802.1x custom"` // vpn|802.1x|custom
-	TunnelMediumType int      `json:"tunnel_medium_type,omitempty"`                                              // [1-9]|1[0-5]|^$
-	TunnelType       int      `json:"tunnel_type,omitempty"`                                                     // [1-9]|1[0-3]|^$
-	UlpUserID        string   `json:"ulp_user_id"`
-	VLAN             int      `json:"vlan,omitempty"` // [2-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|400[0-9]|^$
-	XPassword        string   `json:"x_password,omitempty"`
+	FilterIDs        []string                   `json:"filter_ids,omitempty"`
+	IP               string                     `json:"ip,omitempty" validate:"omitempty,ipv4"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^$
+	Name             string                     `json:"name,omitempty"`                         // ^[^"' ]+$
+	NetworkID        string                     `json:"networkconf_id,omitempty"`
+	TunnelConfigType string                     `json:"tunnel_config_type,omitempty" validate:"omitempty,oneof=vpn 802.1x custom"` // vpn|802.1x|custom
+	TunnelMediumType int                        `json:"tunnel_medium_type,omitempty"`                                              // [1-9]|1[0-5]|^$
+	TunnelType       int                        `json:"tunnel_type,omitempty"`                                                     // [1-9]|1[0-3]|^$
+	UlpUserID        string                     `json:"ulp_user_id"`
+	VLAN             int                        `json:"vlan,omitempty"` // [2-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|400[0-9]|^$
+	XPassword        string                     `json:"x_password,omitempty"`
+	ExtraFields      map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *Account) UnmarshalJSON(b []byte) error {
@@ -56,6 +57,37 @@ func (dst *Account) UnmarshalJSON(b []byte) error {
 	dst.TunnelMediumType = int(aux.TunnelMediumType)
 	dst.TunnelType = int(aux.TunnelType)
 	dst.VLAN = int(aux.VLAN)
+
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":                {},
+			"site_id":            {},
+			"attr_hidden":        {},
+			"attr_hidden_id":     {},
+			"attr_no_delete":     {},
+			"attr_no_edit":       {},
+			"filter_ids":         {},
+			"ip":                 {},
+			"name":               {},
+			"networkconf_id":     {},
+			"tunnel_config_type": {},
+			"tunnel_medium_type": {},
+			"tunnel_type":        {},
+			"ulp_user_id":        {},
+			"vlan":               {},
+			"x_password":         {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
 
 	return nil
 }

@@ -44,6 +44,7 @@ type SettingRadioAi struct {
 	Radios                      []string                          `json:"radios,omitempty" validate:"omitempty,oneof=na ng"`                   // na|ng
 	SettingPreference           string                            `json:"setting_preference,omitempty" validate:"omitempty,oneof=auto manual"` // auto|manual
 	UseXy                       bool                              `json:"useXY"`
+	ExtraFields                 map[string]json.RawMessage        `json:"-"`
 }
 
 func (dst *SettingRadioAi) UnmarshalJSON(b []byte) error {
@@ -85,13 +86,72 @@ func (dst *SettingRadioAi) UnmarshalJSON(b []byte) error {
 		dst.HtModesNg[i] = int(v)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":                             {},
+			"site_id":                         {},
+			"attr_hidden":                     {},
+			"attr_hidden_id":                  {},
+			"attr_no_delete":                  {},
+			"attr_no_edit":                    {},
+			"key":                             {},
+			"auto_adjust_channels_to_country": {},
+			"channels_6e":                     {},
+			"channels_blacklist":              {},
+			"channels_na":                     {},
+			"channels_ng":                     {},
+			"cron_expr":                       {},
+			"default":                         {},
+			"enabled":                         {},
+			"exclude_devices":                 {},
+			"ht_modes_na":                     {},
+			"ht_modes_ng":                     {},
+			"optimize":                        {},
+			"radios":                          {},
+			"setting_preference":              {},
+			"useXY":                           {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src SettingRadioAi) MarshalJSON() ([]byte, error) {
+	type Alias SettingRadioAi
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type SettingRadioAiChannelsBlacklist struct {
-	Channel      int    `json:"channel,omitempty"`                                                       // [1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-9]|2[0-1][0-9]|22[0-1]|22[5-9]|233
-	ChannelWidth int    `json:"channel_width,omitempty" validate:"omitempty,oneof=20 40 80 160 240 320"` // 20|40|80|160|240|320
-	Radio        string `json:"radio,omitempty" validate:"omitempty,oneof=na ng 6e"`                     // na|ng|6e
+	Channel      int                        `json:"channel,omitempty"`                                                       // [1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-9]|2[0-1][0-9]|22[0-1]|22[5-9]|233
+	ChannelWidth int                        `json:"channel_width,omitempty" validate:"omitempty,oneof=20 40 80 160 240 320"` // 20|40|80|160|240|320
+	Radio        string                     `json:"radio,omitempty" validate:"omitempty,oneof=na ng 6e"`                     // na|ng|6e
+	ExtraFields  map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *SettingRadioAiChannelsBlacklist) UnmarshalJSON(b []byte) error {
@@ -112,7 +172,46 @@ func (dst *SettingRadioAiChannelsBlacklist) UnmarshalJSON(b []byte) error {
 	dst.Channel = int(aux.Channel)
 	dst.ChannelWidth = int(aux.ChannelWidth)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"channel":       {},
+			"channel_width": {},
+			"radio":         {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src SettingRadioAiChannelsBlacklist) MarshalJSON() ([]byte, error) {
+	type Alias SettingRadioAiChannelsBlacklist
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 // GetSettingRadioAi Experimental! This function is not yet stable and may change in the future.

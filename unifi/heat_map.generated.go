@@ -25,10 +25,11 @@ type HeatMap struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Description string `json:"description,omitempty"`
-	MapID       string `json:"map_id"`
-	Name        string `json:"name,omitempty"`                                            // .*[^\s]+.*
-	Type        string `json:"type,omitempty" validate:"omitempty,oneof=download upload"` // download|upload
+	Description string                     `json:"description,omitempty"`
+	MapID       string                     `json:"map_id"`
+	Name        string                     `json:"name,omitempty"`                                            // .*[^\s]+.*
+	Type        string                     `json:"type,omitempty" validate:"omitempty,oneof=download upload"` // download|upload
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *HeatMap) UnmarshalJSON(b []byte) error {
@@ -44,7 +45,53 @@ func (dst *HeatMap) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":            {},
+			"site_id":        {},
+			"attr_hidden":    {},
+			"attr_hidden_id": {},
+			"attr_no_delete": {},
+			"attr_no_edit":   {},
+			"description":    {},
+			"map_id":         {},
+			"name":           {},
+			"type":           {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src HeatMap) MarshalJSON() ([]byte, error) {
+	type Alias HeatMap
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listHeatMap(ctx context.Context, site string) ([]HeatMap, error) {

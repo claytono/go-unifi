@@ -22,7 +22,22 @@ func (dst *Account) MarshalJSON() ([]byte, error) {
 	aux.VLAN = emptyStringInt(dst.VLAN)
 
 	b, err := json.Marshal(aux)
-	return b, err
+	if err != nil {
+		return nil, err
+	}
+	if len(dst.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(dst.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) ListAccount(ctx context.Context, site string) ([]Account, error) {

@@ -25,9 +25,10 @@ type FirewallZoneMatrix struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Data    []FirewallZoneMatrixData `json:"data,omitempty"`
-	Name    string                   `json:"name,omitempty"`
-	ZoneKey string                   `json:"zone_key,omitempty"`
+	Data        []FirewallZoneMatrixData   `json:"data,omitempty"`
+	Name        string                     `json:"name,omitempty"`
+	ZoneKey     string                     `json:"zone_key,omitempty"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *FirewallZoneMatrix) UnmarshalJSON(b []byte) error {
@@ -43,12 +44,58 @@ func (dst *FirewallZoneMatrix) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":            {},
+			"site_id":        {},
+			"attr_hidden":    {},
+			"attr_hidden_id": {},
+			"attr_no_delete": {},
+			"attr_no_edit":   {},
+			"data":           {},
+			"name":           {},
+			"zone_key":       {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src FirewallZoneMatrix) MarshalJSON() ([]byte, error) {
+	type Alias FirewallZoneMatrix
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type FirewallZoneMatrixData struct {
-	Action      string `json:"action,omitempty"`
-	PolicyCount int    `json:"policy_count,omitempty"`
+	Action      string                     `json:"action,omitempty"`
+	PolicyCount int                        `json:"policy_count,omitempty"`
+	ExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *FirewallZoneMatrixData) UnmarshalJSON(b []byte) error {
@@ -67,7 +114,45 @@ func (dst *FirewallZoneMatrixData) UnmarshalJSON(b []byte) error {
 	}
 	dst.PolicyCount = int(aux.PolicyCount)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"action":       {},
+			"policy_count": {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src FirewallZoneMatrixData) MarshalJSON() ([]byte, error) {
+	type Alias FirewallZoneMatrixData
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listFirewallZoneMatrix(ctx context.Context, site string) ([]FirewallZoneMatrix, error) {

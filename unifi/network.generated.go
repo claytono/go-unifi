@@ -259,6 +259,7 @@ type Network struct {
 	XSharedClientKey                              string                          `json:"x_shared_client_key,omitempty"`
 	XWANPassword                                  string                          `json:"x_wan_password,omitempty"` // [^"' ]+|^$
 	XWireguardPrivateKey                          string                          `json:"x_wireguard_private_key,omitempty"`
+	ExtraFields                                   map[string]json.RawMessage      `json:"-"`
 }
 
 func (dst *Network) UnmarshalJSON(b []byte) error {
@@ -339,12 +340,268 @@ func (dst *Network) UnmarshalJSON(b []byte) error {
 	dst.WANVLAN = int(aux.WANVLAN)
 	dst.WireguardClientPeerPort = int(aux.WireguardClientPeerPort)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"_id":                                   {},
+			"site_id":                               {},
+			"attr_hidden":                           {},
+			"attr_hidden_id":                        {},
+			"attr_no_delete":                        {},
+			"attr_no_edit":                          {},
+			"auto_scale_enabled":                    {},
+			"dhcpd_boot_enabled":                    {},
+			"dhcpd_boot_filename":                   {},
+			"dhcpd_boot_server":                     {},
+			"dhcpd_conflict_checking":               {},
+			"dhcpd_dns_1":                           {},
+			"dhcpd_dns_2":                           {},
+			"dhcpd_dns_3":                           {},
+			"dhcpd_dns_4":                           {},
+			"dhcpd_dns_enabled":                     {},
+			"dhcpd_enabled":                         {},
+			"dhcpd_gateway":                         {},
+			"dhcpd_gateway_enabled":                 {},
+			"dhcpd_ip_1":                            {},
+			"dhcpd_ip_2":                            {},
+			"dhcpd_ip_3":                            {},
+			"dhcpd_leasetime":                       {},
+			"dhcpd_mac_1":                           {},
+			"dhcpd_mac_2":                           {},
+			"dhcpd_mac_3":                           {},
+			"dhcpd_ntp_1":                           {},
+			"dhcpd_ntp_2":                           {},
+			"dhcpd_ntp_enabled":                     {},
+			"dhcpd_start":                           {},
+			"dhcpd_stop":                            {},
+			"dhcpd_tftp_server":                     {},
+			"dhcpd_time_offset":                     {},
+			"dhcpd_time_offset_enabled":             {},
+			"dhcpd_unifi_controller":                {},
+			"dhcpdv6_allow_slaac":                   {},
+			"dhcpdv6_dns_1":                         {},
+			"dhcpdv6_dns_2":                         {},
+			"dhcpdv6_dns_3":                         {},
+			"dhcpdv6_dns_4":                         {},
+			"dhcpdv6_dns_auto":                      {},
+			"dhcpdv6_enabled":                       {},
+			"dhcpdv6_leasetime":                     {},
+			"dhcpdv6_start":                         {},
+			"dhcpdv6_stop":                          {},
+			"dhcpd_wpad_url":                        {},
+			"dhcpd_wins_1":                          {},
+			"dhcpd_wins_2":                          {},
+			"dhcpd_wins_enabled":                    {},
+			"dhcp_relay_enabled":                    {},
+			"dhcpguard_enabled":                     {},
+			"dpi_enabled":                           {},
+			"dpigroup_id":                           {},
+			"domain_name":                           {},
+			"enabled":                               {},
+			"exposed_to_site_vpn":                   {},
+			"firewall_zone_id":                      {},
+			"gateway_device":                        {},
+			"gateway_type":                          {},
+			"igmp_fastleave":                        {},
+			"igmp_forward_unknown_multicast":        {},
+			"igmp_groupmembership":                  {},
+			"igmp_maxresponse":                      {},
+			"igmp_mcrtrexpiretime":                  {},
+			"igmp_proxy_downstream_networkconf_ids": {},
+			"igmp_proxy_for":                        {},
+			"igmp_proxy_upstream":                   {},
+			"igmp_querier_switches":                 {},
+			"igmp_snooping":                         {},
+			"igmp_supression":                       {},
+			"ipsec_dh_group":                        {},
+			"ipsec_dynamic_routing":                 {},
+			"ipsec_encryption":                      {},
+			"ipsec_esp_dh_group":                    {},
+			"ipsec_esp_encryption":                  {},
+			"ipsec_esp_hash":                        {},
+			"ipsec_esp_lifetime":                    {},
+			"ipsec_hash":                            {},
+			"ipsec_ike_dh_group":                    {},
+			"ipsec_ike_encryption":                  {},
+			"ipsec_ike_hash":                        {},
+			"ipsec_ike_lifetime":                    {},
+			"ipsec_interface":                       {},
+			"ipsec_key_exchange":                    {},
+			"ipsec_local_identifier":                {},
+			"ipsec_local_identifier_enabled":        {},
+			"ipsec_local_ip":                        {},
+			"ipsec_peer_ip":                         {},
+			"ipsec_pfs":                             {},
+			"ipsec_profile":                         {},
+			"ipsec_remote_identifier":               {},
+			"ipsec_remote_identifier_enabled":       {},
+			"ipsec_separate_ikev2_networks":         {},
+			"ipsec_tunnel_ip":                       {},
+			"ipsec_tunnel_ip_enabled":               {},
+			"ip_subnet":                             {},
+			"ipv6_client_address_assignment":        {},
+			"ipv6_interface_type":                   {},
+			"ipv6_pd_auto_prefixid_enabled":         {},
+			"ipv6_pd_interface":                     {},
+			"ipv6_pd_prefixid":                      {},
+			"ipv6_pd_start":                         {},
+			"ipv6_pd_stop":                          {},
+			"ipv6_ra_enabled":                       {},
+			"ipv6_ra_preferred_lifetime":            {},
+			"ipv6_ra_priority":                      {},
+			"ipv6_ra_valid_lifetime":                {},
+			"ipv6_setting_preference":               {},
+			"ipv6_single_network_interface":         {},
+			"ipv6_subnet":                           {},
+			"ipv6_wan_delegation_type":              {},
+			"interface_mtu":                         {},
+			"interface_mtu_enabled":                 {},
+			"internet_access_enabled":               {},
+			"is_nat":                                {},
+			"l2tp_allow_weak_ciphers":               {},
+			"l2tp_interface":                        {},
+			"l2tp_local_wan_ip":                     {},
+			"local_port":                            {},
+			"lte_lan_enabled":                       {},
+			"mac_override":                          {},
+			"mac_override_enabled":                  {},
+			"mdns_enabled":                          {},
+			"nat_outbound_ip_addresses":             {},
+			"name":                                  {},
+			"networkgroup":                          {},
+			"network_isolation_enabled":             {},
+			"openvpn_configuration":                 {},
+			"openvpn_configuration_filename":        {},
+			"openvpn_encryption_cipher":             {},
+			"openvpn_interface":                     {},
+			"openvpn_local_address":                 {},
+			"openvpn_local_port":                    {},
+			"openvpn_local_wan_ip":                  {},
+			"openvpn_mode":                          {},
+			"openvpn_remote_address":                {},
+			"openvpn_remote_host":                   {},
+			"openvpn_remote_port":                   {},
+			"openvpn_username":                      {},
+			"pptpc_require_mppe":                    {},
+			"pptpc_route_distance":                  {},
+			"pptpc_server_ip":                       {},
+			"pptpc_username":                        {},
+			"priority":                              {},
+			"purpose":                               {},
+			"radiusprofile_id":                      {},
+			"remote_site_id":                        {},
+			"remote_site_subnets":                   {},
+			"remote_vpn_dynamic_subnets_enabled":    {},
+			"remote_vpn_subnets":                    {},
+			"report_wan_event":                      {},
+			"require_mschapv2":                      {},
+			"route_distance":                        {},
+			"sdwan_remote_site_id":                  {},
+			"setting_preference":                    {},
+			"single_network_lan":                    {},
+			"uid_policy_enabled":                    {},
+			"uid_policy_name":                       {},
+			"uid_public_gateway_port":               {},
+			"uid_traffic_rules_allowed_ips_and_hostnames":         {},
+			"uid_traffic_rules_enabled":                           {},
+			"uid_vpn_custom_routing":                              {},
+			"uid_vpn_default_dns_suffix":                          {},
+			"uid_vpn_masquerade_enabled":                          {},
+			"uid_vpn_max_connection_time_seconds":                 {},
+			"uid_vpn_sync_public_ip":                              {},
+			"uid_vpn_type":                                        {},
+			"uid_workspace_url":                                   {},
+			"upnp_lan_enabled":                                    {},
+			"usergroup_id":                                        {},
+			"vlan":                                                {},
+			"vlan_enabled":                                        {},
+			"vpn_client_configuration_remote_ip_override":         {},
+			"vpn_client_configuration_remote_ip_override_enabled": {},
+			"vpn_client_default_route":                            {},
+			"vpn_client_pull_dns":                                 {},
+			"vpn_protocol":                                        {},
+			"vpn_type":                                            {},
+			"vrrp_ip_subnet_gw1":                                  {},
+			"vrrp_ip_subnet_gw2":                                  {},
+			"vrrp_vrid":                                           {},
+			"wan_dhcp_cos":                                        {},
+			"wan_dhcp_options":                                    {},
+			"wan_dhcpv6_pd_size":                                  {},
+			"wan_dns1":                                            {},
+			"wan_dns2":                                            {},
+			"wan_dns3":                                            {},
+			"wan_dns4":                                            {},
+			"wan_dns_preference":                                  {},
+			"wan_dslite_remote_host":                              {},
+			"wan_egress_qos":                                      {},
+			"wan_gateway":                                         {},
+			"wan_gateway_v6":                                      {},
+			"wan_ip":                                              {},
+			"wan_ip_aliases":                                      {},
+			"wan_ipv6":                                            {},
+			"wan_ipv6_dns1":                                       {},
+			"wan_ipv6_dns2":                                       {},
+			"wan_ipv6_dns_preference":                             {},
+			"wan_load_balance_type":                               {},
+			"wan_load_balance_weight":                             {},
+			"wan_netmask":                                         {},
+			"wan_networkgroup":                                    {},
+			"wan_pppoe_password_enabled":                          {},
+			"wan_pppoe_username_enabled":                          {},
+			"wan_prefixlen":                                       {},
+			"wan_provider_capabilities":                           {},
+			"wan_smartq_down_rate":                                {},
+			"wan_smartq_enabled":                                  {},
+			"wan_smartq_up_rate":                                  {},
+			"wan_type":                                            {},
+			"wan_type_v6":                                         {},
+			"wan_username":                                        {},
+			"wan_vlan":                                            {},
+			"wan_vlan_enabled":                                    {},
+			"wireguard_client_configuration_file":                 {},
+			"wireguard_client_configuration_filename":             {},
+			"wireguard_client_mode":                               {},
+			"wireguard_client_peer_ip":                            {},
+			"wireguard_client_peer_port":                          {},
+			"wireguard_client_peer_public_key":                    {},
+			"wireguard_client_preshared_key":                      {},
+			"wireguard_client_preshared_key_enabled":              {},
+			"wireguard_interface":                                 {},
+			"wireguard_local_wan_ip":                              {},
+			"wireguard_public_key":                                {},
+			"x_auth_key":                                          {},
+			"x_ca_crt":                                            {},
+			"x_ca_key":                                            {},
+			"x_dh_key":                                            {},
+			"x_ipsec_pre_shared_key":                              {},
+			"x_openvpn_password":                                  {},
+			"x_openvpn_shared_secret_key":                         {},
+			"x_pptpc_password":                                    {},
+			"x_server_crt":                                        {},
+			"x_server_key":                                        {},
+			"x_shared_client_crt":                                 {},
+			"x_shared_client_key":                                 {},
+			"x_wan_password":                                      {},
+			"x_wireguard_private_key":                             {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
 type NetworkIGMPQuerierSwitches struct {
-	QuerierAddress string `json:"querier_address" validate:"omitempty,ipv4"`     // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^$
-	SwitchMAC      string `json:"switch_mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$
+	QuerierAddress string                     `json:"querier_address" validate:"omitempty,ipv4"`     // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^$
+	SwitchMAC      string                     `json:"switch_mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$
+	ExtraFields    map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *NetworkIGMPQuerierSwitches) UnmarshalJSON(b []byte) error {
@@ -360,14 +617,53 @@ func (dst *NetworkIGMPQuerierSwitches) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"querier_address": {},
+			"switch_mac":      {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src NetworkIGMPQuerierSwitches) MarshalJSON() ([]byte, error) {
+	type Alias NetworkIGMPQuerierSwitches
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type NetworkNATOutboundIPAddresses struct {
-	IPAddress       string   `json:"ip_address" validate:"omitempty,ipv4"`                                     // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^$
-	IPAddressPool   []string `json:"ip_address_pool,omitempty"`                                                // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])-(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
-	Mode            string   `json:"mode,omitempty" validate:"omitempty,oneof=all ip_address ip_address_pool"` // all|ip_address|ip_address_pool
-	WANNetworkGroup string   `json:"wan_network_group,omitempty" validate:"omitempty,oneof=WAN WAN2"`          // WAN|WAN2
+	IPAddress       string                     `json:"ip_address" validate:"omitempty,ipv4"`                                     // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^$
+	IPAddressPool   []string                   `json:"ip_address_pool,omitempty"`                                                // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])-(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
+	Mode            string                     `json:"mode,omitempty" validate:"omitempty,oneof=all ip_address ip_address_pool"` // all|ip_address|ip_address_pool
+	WANNetworkGroup string                     `json:"wan_network_group,omitempty" validate:"omitempty,oneof=WAN WAN2"`          // WAN|WAN2
+	ExtraFields     map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *NetworkNATOutboundIPAddresses) UnmarshalJSON(b []byte) error {
@@ -383,12 +679,53 @@ func (dst *NetworkNATOutboundIPAddresses) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to unmarshal alias: %w", err)
 	}
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"ip_address":        {},
+			"ip_address_pool":   {},
+			"mode":              {},
+			"wan_network_group": {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src NetworkNATOutboundIPAddresses) MarshalJSON() ([]byte, error) {
+	type Alias NetworkNATOutboundIPAddresses
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type NetworkWANDHCPOptions struct {
-	OptionNumber int    `json:"optionNumber,omitempty"` // ([1-9]|[1-8][0-9]|9[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-4])
-	Value        string `json:"value,omitempty"`
+	OptionNumber int                        `json:"optionNumber,omitempty"` // ([1-9]|[1-8][0-9]|9[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-4])
+	Value        string                     `json:"value,omitempty"`
+	ExtraFields  map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *NetworkWANDHCPOptions) UnmarshalJSON(b []byte) error {
@@ -407,12 +744,51 @@ func (dst *NetworkWANDHCPOptions) UnmarshalJSON(b []byte) error {
 	}
 	dst.OptionNumber = int(aux.OptionNumber)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"optionNumber": {},
+			"value":        {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
 }
 
+func (src NetworkWANDHCPOptions) MarshalJSON() ([]byte, error) {
+	type Alias NetworkWANDHCPOptions
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
+}
+
 type NetworkWANProviderCapabilities struct {
-	DownloadKilobitsPerSecond int `json:"download_kilobits_per_second,omitempty" validate:"omitempty,numeric_nonzero"` // ^[1-9][0-9]*$
-	UploadKilobitsPerSecond   int `json:"upload_kilobits_per_second,omitempty" validate:"omitempty,numeric_nonzero"`   // ^[1-9][0-9]*$
+	DownloadKilobitsPerSecond int                        `json:"download_kilobits_per_second,omitempty" validate:"omitempty,numeric_nonzero"` // ^[1-9][0-9]*$
+	UploadKilobitsPerSecond   int                        `json:"upload_kilobits_per_second,omitempty" validate:"omitempty,numeric_nonzero"`   // ^[1-9][0-9]*$
+	ExtraFields               map[string]json.RawMessage `json:"-"`
 }
 
 func (dst *NetworkWANProviderCapabilities) UnmarshalJSON(b []byte) error {
@@ -433,7 +809,45 @@ func (dst *NetworkWANProviderCapabilities) UnmarshalJSON(b []byte) error {
 	dst.DownloadKilobitsPerSecond = int(aux.DownloadKilobitsPerSecond)
 	dst.UploadKilobitsPerSecond = int(aux.UploadKilobitsPerSecond)
 
+	// Capture extra fields not in the struct
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err == nil {
+		known := map[string]struct{}{
+			"download_kilobits_per_second": {},
+			"upload_kilobits_per_second":   {},
+		}
+		for k, v := range raw {
+			if _, ok := known[k]; !ok {
+				if dst.ExtraFields == nil {
+					dst.ExtraFields = make(map[string]json.RawMessage)
+				}
+				dst.ExtraFields[k] = v
+			}
+		}
+	}
+
 	return nil
+}
+
+func (src NetworkWANProviderCapabilities) MarshalJSON() ([]byte, error) {
+	type Alias NetworkWANProviderCapabilities
+	b, err := json.Marshal(Alias(src))
+	if err != nil {
+		return nil, err
+	}
+	if len(src.ExtraFields) == 0 {
+		return b, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	extra, err := json.Marshal(src.ExtraFields)
+	if err != nil {
+		return nil, err
+	}
+	m["_additional_properties"] = extra
+	return json.Marshal(m)
 }
 
 func (c *client) listNetwork(ctx context.Context, site string) ([]Network, error) {
