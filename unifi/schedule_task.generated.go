@@ -25,11 +25,12 @@ type ScheduleTask struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Action          string                       `json:"action,omitempty"` // upgrade
-	CronExpr        string                       `json:"cron_expr,omitempty"`
-	ExecuteOnlyOnce bool                         `json:"execute_only_once"`
-	Name            string                       `json:"name,omitempty"`
-	UpgradeTargets  []ScheduleTaskUpgradeTargets `json:"upgrade_targets,omitempty"`
+	Action           string                       `json:"action,omitempty"` // upgrade
+	CronExpr         string                       `json:"cron_expr,omitempty"`
+	ExecuteOnlyOnce  bool                         `json:"execute_only_once"`
+	Name             string                       `json:"name,omitempty"`
+	UpgradeTargets   []ScheduleTaskUpgradeTargets `json:"upgrade_targets,omitempty"`
+	AdditionalFields map[string]json.RawMessage   `json:"_additional_properties,omitempty"`
 }
 
 func (dst *ScheduleTask) UnmarshalJSON(b []byte) error {
@@ -48,8 +49,29 @@ func (dst *ScheduleTask) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *ScheduleTask) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":               {},
+		"site_id":           {},
+		"attr_hidden":       {},
+		"attr_hidden_id":    {},
+		"attr_no_delete":    {},
+		"attr_no_edit":      {},
+		"action":            {},
+		"cron_expr":         {},
+		"execute_only_once": {},
+		"name":              {},
+		"upgrade_targets":   {},
+	}
+}
+
+func (dst *ScheduleTask) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type ScheduleTaskUpgradeTargets struct {
-	MAC string `json:"mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
+	MAC              string                     `json:"mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *ScheduleTaskUpgradeTargets) UnmarshalJSON(b []byte) error {
@@ -68,6 +90,16 @@ func (dst *ScheduleTaskUpgradeTargets) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *ScheduleTaskUpgradeTargets) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"mac": {},
+	}
+}
+
+func (dst *ScheduleTaskUpgradeTargets) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listScheduleTask(ctx context.Context, site string) ([]ScheduleTask, error) {
 	var respBody struct {
 		Meta Meta           `json:"meta"`
@@ -83,12 +115,22 @@ func (c *client) listScheduleTask(ctx context.Context, site string) ([]ScheduleT
 }
 
 func (c *client) getScheduleTask(ctx context.Context, site, id string) (*ScheduleTask, error) {
+	path := fmt.Sprintf("s/%s/rest/scheduletask/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item ScheduleTask
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta           `json:"meta"`
 		Data []ScheduleTask `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/scheduletask/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +157,10 @@ func (c *client) createScheduleTask(ctx context.Context, site string, d *Schedul
 		Data []ScheduleTask `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/scheduletask", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/scheduletask", site), struct {
+		*ScheduleTask
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{ScheduleTask: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +180,10 @@ func (c *client) updateScheduleTask(ctx context.Context, site string, d *Schedul
 		Data []ScheduleTask `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/scheduletask/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/scheduletask/%s", site, d.ID), struct {
+		*ScheduleTask
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{ScheduleTask: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

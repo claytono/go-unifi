@@ -29,7 +29,8 @@ type SettingUsw struct {
 
 	Key string `json:"key"`
 
-	DHCPSnoop bool `json:"dhcp_snoop"`
+	DHCPSnoop        bool                       `json:"dhcp_snoop"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingUsw) UnmarshalJSON(b []byte) error {
@@ -48,6 +49,21 @@ func (dst *SettingUsw) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingUsw) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"dhcp_snoop":     {},
+	}
+}
+
+func (dst *SettingUsw) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 // GetSettingUsw Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingUsw(ctx context.Context, site string) (*SettingUsw, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingUswKey)
@@ -63,7 +79,10 @@ func (c *client) GetSettingUsw(ctx context.Context, site string) (*SettingUsw, e
 // UpdateSettingUsw Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingUsw(ctx context.Context, site string, s *SettingUsw) (*SettingUsw, error) {
 	s.Key = SettingUswKey
-	result, err := c.SetSetting(ctx, site, SettingUswKey, s)
+	result, err := c.SetSetting(ctx, site, SettingUswKey, struct {
+		*SettingUsw
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingUsw: s})
 	if err != nil {
 		return nil, err
 	}

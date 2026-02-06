@@ -25,35 +25,36 @@ type HotspotPackage struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Amount                         float64 `json:"amount,omitempty"`
-	ChargedAs                      string  `json:"charged_as,omitempty"`
-	Currency                       string  `json:"currency,omitempty"` // [A-Z]{3}
-	CustomPaymentFieldsEnabled     bool    `json:"custom_payment_fields_enabled"`
-	Hours                          int     `json:"hours,omitempty"`
-	Index                          int     `json:"index,omitempty"`
-	LimitDown                      int     `json:"limit_down,omitempty"`
-	LimitOverwrite                 bool    `json:"limit_overwrite"`
-	LimitQuota                     int     `json:"limit_quota,omitempty"`
-	LimitUp                        int     `json:"limit_up,omitempty"`
-	Name                           string  `json:"name,omitempty"`
-	PaymentFieldsAddressEnabled    bool    `json:"payment_fields_address_enabled"`
-	PaymentFieldsAddressRequired   bool    `json:"payment_fields_address_required"`
-	PaymentFieldsCityEnabled       bool    `json:"payment_fields_city_enabled"`
-	PaymentFieldsCityRequired      bool    `json:"payment_fields_city_required"`
-	PaymentFieldsCountryEnabled    bool    `json:"payment_fields_country_enabled"`
-	PaymentFieldsCountryRequired   bool    `json:"payment_fields_country_required"`
-	PaymentFieldsEmailEnabled      bool    `json:"payment_fields_email_enabled"`
-	PaymentFieldsEmailRequired     bool    `json:"payment_fields_email_required"`
-	PaymentFieldsFirstNameEnabled  bool    `json:"payment_fields_first_name_enabled"`
-	PaymentFieldsFirstNameRequired bool    `json:"payment_fields_first_name_required"`
-	PaymentFieldsLastNameEnabled   bool    `json:"payment_fields_last_name_enabled"`
-	PaymentFieldsLastNameRequired  bool    `json:"payment_fields_last_name_required"`
-	PaymentFieldsStateEnabled      bool    `json:"payment_fields_state_enabled"`
-	PaymentFieldsStateRequired     bool    `json:"payment_fields_state_required"`
-	PaymentFieldsZipEnabled        bool    `json:"payment_fields_zip_enabled"`
-	PaymentFieldsZipRequired       bool    `json:"payment_fields_zip_required"`
-	TrialDurationMinutes           int     `json:"trial_duration_minutes,omitempty"`
-	TrialReset                     float64 `json:"trial_reset,omitempty"`
+	Amount                         float64                    `json:"amount,omitempty"`
+	ChargedAs                      string                     `json:"charged_as,omitempty"`
+	Currency                       string                     `json:"currency,omitempty"` // [A-Z]{3}
+	CustomPaymentFieldsEnabled     bool                       `json:"custom_payment_fields_enabled"`
+	Hours                          int                        `json:"hours,omitempty"`
+	Index                          int                        `json:"index,omitempty"`
+	LimitDown                      int                        `json:"limit_down,omitempty"`
+	LimitOverwrite                 bool                       `json:"limit_overwrite"`
+	LimitQuota                     int                        `json:"limit_quota,omitempty"`
+	LimitUp                        int                        `json:"limit_up,omitempty"`
+	Name                           string                     `json:"name,omitempty"`
+	PaymentFieldsAddressEnabled    bool                       `json:"payment_fields_address_enabled"`
+	PaymentFieldsAddressRequired   bool                       `json:"payment_fields_address_required"`
+	PaymentFieldsCityEnabled       bool                       `json:"payment_fields_city_enabled"`
+	PaymentFieldsCityRequired      bool                       `json:"payment_fields_city_required"`
+	PaymentFieldsCountryEnabled    bool                       `json:"payment_fields_country_enabled"`
+	PaymentFieldsCountryRequired   bool                       `json:"payment_fields_country_required"`
+	PaymentFieldsEmailEnabled      bool                       `json:"payment_fields_email_enabled"`
+	PaymentFieldsEmailRequired     bool                       `json:"payment_fields_email_required"`
+	PaymentFieldsFirstNameEnabled  bool                       `json:"payment_fields_first_name_enabled"`
+	PaymentFieldsFirstNameRequired bool                       `json:"payment_fields_first_name_required"`
+	PaymentFieldsLastNameEnabled   bool                       `json:"payment_fields_last_name_enabled"`
+	PaymentFieldsLastNameRequired  bool                       `json:"payment_fields_last_name_required"`
+	PaymentFieldsStateEnabled      bool                       `json:"payment_fields_state_enabled"`
+	PaymentFieldsStateRequired     bool                       `json:"payment_fields_state_required"`
+	PaymentFieldsZipEnabled        bool                       `json:"payment_fields_zip_enabled"`
+	PaymentFieldsZipRequired       bool                       `json:"payment_fields_zip_required"`
+	TrialDurationMinutes           int                        `json:"trial_duration_minutes,omitempty"`
+	TrialReset                     float64                    `json:"trial_reset,omitempty"`
+	AdditionalFields               map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *HotspotPackage) UnmarshalJSON(b []byte) error {
@@ -85,6 +86,50 @@ func (dst *HotspotPackage) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *HotspotPackage) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                                {},
+		"site_id":                            {},
+		"attr_hidden":                        {},
+		"attr_hidden_id":                     {},
+		"attr_no_delete":                     {},
+		"attr_no_edit":                       {},
+		"amount":                             {},
+		"charged_as":                         {},
+		"currency":                           {},
+		"custom_payment_fields_enabled":      {},
+		"hours":                              {},
+		"index":                              {},
+		"limit_down":                         {},
+		"limit_overwrite":                    {},
+		"limit_quota":                        {},
+		"limit_up":                           {},
+		"name":                               {},
+		"payment_fields_address_enabled":     {},
+		"payment_fields_address_required":    {},
+		"payment_fields_city_enabled":        {},
+		"payment_fields_city_required":       {},
+		"payment_fields_country_enabled":     {},
+		"payment_fields_country_required":    {},
+		"payment_fields_email_enabled":       {},
+		"payment_fields_email_required":      {},
+		"payment_fields_first_name_enabled":  {},
+		"payment_fields_first_name_required": {},
+		"payment_fields_last_name_enabled":   {},
+		"payment_fields_last_name_required":  {},
+		"payment_fields_state_enabled":       {},
+		"payment_fields_state_required":      {},
+		"payment_fields_zip_enabled":         {},
+		"payment_fields_zip_required":        {},
+		"trial_duration_minutes":             {},
+		"trial_reset":                        {},
+	}
+}
+
+func (dst *HotspotPackage) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listHotspotPackage(ctx context.Context, site string) ([]HotspotPackage, error) {
 	var respBody struct {
 		Meta Meta             `json:"meta"`
@@ -100,12 +145,22 @@ func (c *client) listHotspotPackage(ctx context.Context, site string) ([]Hotspot
 }
 
 func (c *client) getHotspotPackage(ctx context.Context, site, id string) (*HotspotPackage, error) {
+	path := fmt.Sprintf("s/%s/rest/hotspotpackage/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item HotspotPackage
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta             `json:"meta"`
 		Data []HotspotPackage `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/hotspotpackage/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +187,10 @@ func (c *client) createHotspotPackage(ctx context.Context, site string, d *Hotsp
 		Data []HotspotPackage `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/hotspotpackage", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/hotspotpackage", site), struct {
+		*HotspotPackage
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{HotspotPackage: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +210,10 @@ func (c *client) updateHotspotPackage(ctx context.Context, site string, d *Hotsp
 		Data []HotspotPackage `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/hotspotpackage/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/hotspotpackage/%s", site, d.ID), struct {
+		*HotspotPackage
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{HotspotPackage: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

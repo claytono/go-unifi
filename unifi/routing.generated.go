@@ -25,16 +25,17 @@ type Routing struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Enabled              bool   `json:"enabled"`
-	GatewayDevice        string `json:"gateway_device,omitempty" validate:"omitempty,mac"`                                              // ^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$
-	GatewayType          string `json:"gateway_type,omitempty" validate:"omitempty,oneof=default switch"`                               // default|switch
-	Name                 string `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"`                                              // .{1,128}
-	StaticRouteDistance  int    `json:"static-route_distance,omitempty"`                                                                // ^[1-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]$|^$
-	StaticRouteInterface string `json:"static-route_interface"`                                                                         // WAN[1-8]?|[\d\w]+|^$
-	StaticRouteNetwork   string `json:"static-route_network,omitempty"`                                                                 // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\/([1-9]|[1-2][0-9]|3[0-2])$|^([a-fA-F0-9:]+\/(([1-9]|[1-8][0-9]|9[0-9]|1[01][0-9]|12[0-8])))$
-	StaticRouteNexthop   string `json:"static-route_nexthop"`                                                                           // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([1-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^([a-fA-F0-9:]+)$|^$
-	StaticRouteType      string `json:"static-route_type,omitempty" validate:"omitempty,oneof=nexthop-route interface-route blackhole"` // nexthop-route|interface-route|blackhole
-	Type                 string `json:"type,omitempty"`                                                                                 // static-route
+	Enabled              bool                       `json:"enabled"`
+	GatewayDevice        string                     `json:"gateway_device,omitempty" validate:"omitempty,mac"`                                              // ^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$
+	GatewayType          string                     `json:"gateway_type,omitempty" validate:"omitempty,oneof=default switch"`                               // default|switch
+	Name                 string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"`                                              // .{1,128}
+	StaticRouteDistance  int                        `json:"static-route_distance,omitempty"`                                                                // ^[1-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]$|^$
+	StaticRouteInterface string                     `json:"static-route_interface"`                                                                         // WAN[1-8]?|[\d\w]+|^$
+	StaticRouteNetwork   string                     `json:"static-route_network,omitempty"`                                                                 // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\/([1-9]|[1-2][0-9]|3[0-2])$|^([a-fA-F0-9:]+\/(([1-9]|[1-8][0-9]|9[0-9]|1[01][0-9]|12[0-8])))$
+	StaticRouteNexthop   string                     `json:"static-route_nexthop"`                                                                           // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([1-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^([a-fA-F0-9:]+)$|^$
+	StaticRouteType      string                     `json:"static-route_type,omitempty" validate:"omitempty,oneof=nexthop-route interface-route blackhole"` // nexthop-route|interface-route|blackhole
+	Type                 string                     `json:"type,omitempty"`                                                                                 // static-route
+	AdditionalFields     map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *Routing) UnmarshalJSON(b []byte) error {
@@ -56,6 +57,29 @@ func (dst *Routing) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *Routing) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                    {},
+		"site_id":                {},
+		"attr_hidden":            {},
+		"attr_hidden_id":         {},
+		"attr_no_delete":         {},
+		"attr_no_edit":           {},
+		"enabled":                {},
+		"gateway_device":         {},
+		"gateway_type":           {},
+		"name":                   {},
+		"static-route_distance":  {},
+		"static-route_interface": {},
+		"static-route_network":   {},
+		"static-route_nexthop":   {},
+		"static-route_type":      {},
+		"type":                   {},
+	}
+}
+
+func (dst *Routing) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 func (c *client) listRouting(ctx context.Context, site string) ([]Routing, error) {
 	var respBody struct {
 		Meta Meta      `json:"meta"`
@@ -71,12 +95,22 @@ func (c *client) listRouting(ctx context.Context, site string) ([]Routing, error
 }
 
 func (c *client) getRouting(ctx context.Context, site, id string) (*Routing, error) {
+	path := fmt.Sprintf("s/%s/rest/routing/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item Routing
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta      `json:"meta"`
 		Data []Routing `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/routing/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +137,10 @@ func (c *client) createRouting(ctx context.Context, site string, d *Routing) (*R
 		Data []Routing `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/routing", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/routing", site), struct {
+		*Routing
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{Routing: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +160,10 @@ func (c *client) updateRouting(ctx context.Context, site string, d *Routing) (*R
 		Data []Routing `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/routing/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/routing/%s", site, d.ID), struct {
+		*Routing
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{Routing: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

@@ -29,7 +29,8 @@ type SettingEvaluationScore struct {
 
 	Key string `json:"key"`
 
-	DismissedIDs []string `json:"dismissed_ids,omitempty"` // ^[a-zA-Z]{2}[0-9]{2,3}$|^$
+	DismissedIDs     []string                   `json:"dismissed_ids,omitempty"` // ^[a-zA-Z]{2}[0-9]{2,3}$|^$
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingEvaluationScore) UnmarshalJSON(b []byte) error {
@@ -48,6 +49,23 @@ func (dst *SettingEvaluationScore) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingEvaluationScore) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"dismissed_ids":  {},
+	}
+}
+
+func (dst *SettingEvaluationScore) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingEvaluationScore Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingEvaluationScore(ctx context.Context, site string) (*SettingEvaluationScore, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingEvaluationScoreKey)
@@ -63,7 +81,10 @@ func (c *client) GetSettingEvaluationScore(ctx context.Context, site string) (*S
 // UpdateSettingEvaluationScore Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingEvaluationScore(ctx context.Context, site string, s *SettingEvaluationScore) (*SettingEvaluationScore, error) {
 	s.Key = SettingEvaluationScoreKey
-	result, err := c.SetSetting(ctx, site, SettingEvaluationScoreKey, s)
+	result, err := c.SetSetting(ctx, site, SettingEvaluationScoreKey, struct {
+		*SettingEvaluationScore
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingEvaluationScore: s})
 	if err != nil {
 		return nil, err
 	}

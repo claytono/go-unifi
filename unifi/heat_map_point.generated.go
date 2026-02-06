@@ -25,11 +25,12 @@ type HeatMapPoint struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	DownloadSpeed float64 `json:"download_speed,omitempty"`
-	HeatmapID     string  `json:"heatmap_id"`
-	UploadSpeed   float64 `json:"upload_speed,omitempty"`
-	X             float64 `json:"x,omitempty"`
-	Y             float64 `json:"y,omitempty"`
+	DownloadSpeed    float64                    `json:"download_speed,omitempty"`
+	HeatmapID        string                     `json:"heatmap_id"`
+	UploadSpeed      float64                    `json:"upload_speed,omitempty"`
+	X                float64                    `json:"x,omitempty"`
+	Y                float64                    `json:"y,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *HeatMapPoint) UnmarshalJSON(b []byte) error {
@@ -48,6 +49,26 @@ func (dst *HeatMapPoint) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *HeatMapPoint) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"download_speed": {},
+		"heatmap_id":     {},
+		"upload_speed":   {},
+		"x":              {},
+		"y":              {},
+	}
+}
+
+func (dst *HeatMapPoint) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listHeatMapPoint(ctx context.Context, site string) ([]HeatMapPoint, error) {
 	var respBody struct {
 		Meta Meta           `json:"meta"`
@@ -63,12 +84,22 @@ func (c *client) listHeatMapPoint(ctx context.Context, site string) ([]HeatMapPo
 }
 
 func (c *client) getHeatMapPoint(ctx context.Context, site, id string) (*HeatMapPoint, error) {
+	path := fmt.Sprintf("s/%s/rest/heatmappoint/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item HeatMapPoint
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta           `json:"meta"`
 		Data []HeatMapPoint `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/heatmappoint/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +126,10 @@ func (c *client) createHeatMapPoint(ctx context.Context, site string, d *HeatMap
 		Data []HeatMapPoint `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/heatmappoint", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/heatmappoint", site), struct {
+		*HeatMapPoint
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{HeatMapPoint: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +149,10 @@ func (c *client) updateHeatMapPoint(ctx context.Context, site string, d *HeatMap
 		Data []HeatMapPoint `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/heatmappoint/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/heatmappoint/%s", site, d.ID), struct {
+		*HeatMapPoint
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{HeatMapPoint: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

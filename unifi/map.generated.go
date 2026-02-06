@@ -25,19 +25,20 @@ type Map struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Lat        string  `json:"lat,omitempty"`                                                         // ^([-]?[\d]+[.]?[\d]*([eE][-+]?[\d]+)?)$
-	Lng        string  `json:"lng,omitempty"`                                                         // ^([-]?[\d]+[.]?[\d]*([eE][-+]?[\d]+)?)$
-	MapTypeID  string  `json:"mapTypeId" validate:"omitempty,oneof=satellite roadmap hybrid terrain"` // satellite|roadmap|hybrid|terrain
-	Name       string  `json:"name,omitempty"`
-	OffsetLeft float64 `json:"offset_left,omitempty"`
-	OffsetTop  float64 `json:"offset_top,omitempty"`
-	Opacity    float64 `json:"opacity,omitempty"` // ^(0(\.[\d]{1,2})?|1)$|^$
-	Selected   bool    `json:"selected"`
-	Tilt       int     `json:"tilt,omitempty"`
-	Type       string  `json:"type,omitempty" validate:"omitempty,oneof=designerMap imageMap googleMap"` // designerMap|imageMap|googleMap
-	Unit       string  `json:"unit,omitempty" validate:"omitempty,oneof=m f"`                            // m|f
-	Upp        float64 `json:"upp,omitempty"`
-	Zoom       int     `json:"zoom,omitempty"`
+	Lat              string                     `json:"lat,omitempty"`                                                         // ^([-]?[\d]+[.]?[\d]*([eE][-+]?[\d]+)?)$
+	Lng              string                     `json:"lng,omitempty"`                                                         // ^([-]?[\d]+[.]?[\d]*([eE][-+]?[\d]+)?)$
+	MapTypeID        string                     `json:"mapTypeId" validate:"omitempty,oneof=satellite roadmap hybrid terrain"` // satellite|roadmap|hybrid|terrain
+	Name             string                     `json:"name,omitempty"`
+	OffsetLeft       float64                    `json:"offset_left,omitempty"`
+	OffsetTop        float64                    `json:"offset_top,omitempty"`
+	Opacity          float64                    `json:"opacity,omitempty"` // ^(0(\.[\d]{1,2})?|1)$|^$
+	Selected         bool                       `json:"selected"`
+	Tilt             int                        `json:"tilt,omitempty"`
+	Type             string                     `json:"type,omitempty" validate:"omitempty,oneof=designerMap imageMap googleMap"` // designerMap|imageMap|googleMap
+	Unit             string                     `json:"unit,omitempty" validate:"omitempty,oneof=m f"`                            // m|f
+	Upp              float64                    `json:"upp,omitempty"`
+	Zoom             int                        `json:"zoom,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *Map) UnmarshalJSON(b []byte) error {
@@ -61,6 +62,32 @@ func (dst *Map) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *Map) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"lat":            {},
+		"lng":            {},
+		"mapTypeId":      {},
+		"name":           {},
+		"offset_left":    {},
+		"offset_top":     {},
+		"opacity":        {},
+		"selected":       {},
+		"tilt":           {},
+		"type":           {},
+		"unit":           {},
+		"upp":            {},
+		"zoom":           {},
+	}
+}
+
+func (dst *Map) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 func (c *client) listMap(ctx context.Context, site string) ([]Map, error) {
 	var respBody struct {
 		Meta Meta  `json:"meta"`
@@ -76,12 +103,22 @@ func (c *client) listMap(ctx context.Context, site string) ([]Map, error) {
 }
 
 func (c *client) getMap(ctx context.Context, site, id string) (*Map, error) {
+	path := fmt.Sprintf("s/%s/rest/map/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item Map
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta  `json:"meta"`
 		Data []Map `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/map/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +145,10 @@ func (c *client) createMap(ctx context.Context, site string, d *Map) (*Map, erro
 		Data []Map `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/map", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/map", site), struct {
+		*Map
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{Map: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +168,10 @@ func (c *client) updateMap(ctx context.Context, site string, d *Map) (*Map, erro
 		Data []Map `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/map/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/map/%s", site, d.ID), struct {
+		*Map
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{Map: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

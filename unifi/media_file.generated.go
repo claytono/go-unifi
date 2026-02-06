@@ -25,7 +25,8 @@ type MediaFile struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Name string `json:"name,omitempty"`
+	Name             string                     `json:"name,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *MediaFile) UnmarshalJSON(b []byte) error {
@@ -44,6 +45,20 @@ func (dst *MediaFile) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *MediaFile) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"name":           {},
+	}
+}
+
+func (dst *MediaFile) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 func (c *client) listMediaFile(ctx context.Context, site string) ([]MediaFile, error) {
 	var respBody struct {
 		Meta Meta        `json:"meta"`
@@ -59,12 +74,22 @@ func (c *client) listMediaFile(ctx context.Context, site string) ([]MediaFile, e
 }
 
 func (c *client) getMediaFile(ctx context.Context, site, id string) (*MediaFile, error) {
+	path := fmt.Sprintf("s/%s/rest/mediafile/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item MediaFile
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta        `json:"meta"`
 		Data []MediaFile `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/mediafile/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +116,10 @@ func (c *client) createMediaFile(ctx context.Context, site string, d *MediaFile)
 		Data []MediaFile `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/mediafile", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/mediafile", site), struct {
+		*MediaFile
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{MediaFile: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +139,10 @@ func (c *client) updateMediaFile(ctx context.Context, site string, d *MediaFile)
 		Data []MediaFile `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/mediafile/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/mediafile/%s", site, d.ID), struct {
+		*MediaFile
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{MediaFile: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

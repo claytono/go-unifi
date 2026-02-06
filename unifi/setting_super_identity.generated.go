@@ -29,8 +29,9 @@ type SettingSuperIdentity struct {
 
 	Key string `json:"key"`
 
-	Hostname string `json:"hostname,omitempty"`
-	Name     string `json:"name,omitempty"`
+	Hostname         string                     `json:"hostname,omitempty"`
+	Name             string                     `json:"name,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingSuperIdentity) UnmarshalJSON(b []byte) error {
@@ -49,6 +50,24 @@ func (dst *SettingSuperIdentity) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingSuperIdentity) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"hostname":       {},
+		"name":           {},
+	}
+}
+
+func (dst *SettingSuperIdentity) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingSuperIdentity Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingSuperIdentity(ctx context.Context, site string) (*SettingSuperIdentity, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingSuperIdentityKey)
@@ -64,7 +83,10 @@ func (c *client) GetSettingSuperIdentity(ctx context.Context, site string) (*Set
 // UpdateSettingSuperIdentity Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingSuperIdentity(ctx context.Context, site string, s *SettingSuperIdentity) (*SettingSuperIdentity, error) {
 	s.Key = SettingSuperIdentityKey
-	result, err := c.SetSetting(ctx, site, SettingSuperIdentityKey, s)
+	result, err := c.SetSetting(ctx, site, SettingSuperIdentityKey, struct {
+		*SettingSuperIdentity
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingSuperIdentity: s})
 	if err != nil {
 		return nil, err
 	}

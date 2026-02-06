@@ -29,12 +29,13 @@ type SettingConnectivity struct {
 
 	Key string `json:"key"`
 
-	EnableIsolatedWLAN bool   `json:"enable_isolated_wlan"`
-	Enabled            bool   `json:"enabled"`
-	UplinkHost         string `json:"uplink_host,omitempty"`
-	UplinkType         string `json:"uplink_type,omitempty"`
-	XMeshEssid         string `json:"x_mesh_essid,omitempty"`
-	XMeshPsk           string `json:"x_mesh_psk,omitempty"`
+	EnableIsolatedWLAN bool                       `json:"enable_isolated_wlan"`
+	Enabled            bool                       `json:"enabled"`
+	UplinkHost         string                     `json:"uplink_host,omitempty"`
+	UplinkType         string                     `json:"uplink_type,omitempty"`
+	XMeshEssid         string                     `json:"x_mesh_essid,omitempty"`
+	XMeshPsk           string                     `json:"x_mesh_psk,omitempty"`
+	AdditionalFields   map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingConnectivity) UnmarshalJSON(b []byte) error {
@@ -53,6 +54,28 @@ func (dst *SettingConnectivity) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingConnectivity) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                  {},
+		"site_id":              {},
+		"attr_hidden":          {},
+		"attr_hidden_id":       {},
+		"attr_no_delete":       {},
+		"attr_no_edit":         {},
+		"key":                  {},
+		"enable_isolated_wlan": {},
+		"enabled":              {},
+		"uplink_host":          {},
+		"uplink_type":          {},
+		"x_mesh_essid":         {},
+		"x_mesh_psk":           {},
+	}
+}
+
+func (dst *SettingConnectivity) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingConnectivity Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingConnectivity(ctx context.Context, site string) (*SettingConnectivity, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingConnectivityKey)
@@ -68,7 +91,10 @@ func (c *client) GetSettingConnectivity(ctx context.Context, site string) (*Sett
 // UpdateSettingConnectivity Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingConnectivity(ctx context.Context, site string, s *SettingConnectivity) (*SettingConnectivity, error) {
 	s.Key = SettingConnectivityKey
-	result, err := c.SetSetting(ctx, site, SettingConnectivityKey, s)
+	result, err := c.SetSetting(ctx, site, SettingConnectivityKey, struct {
+		*SettingConnectivity
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingConnectivity: s})
 	if err != nil {
 		return nil, err
 	}

@@ -25,36 +25,37 @@ type FirewallRule struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Action                string   `json:"action,omitempty" validate:"omitempty,oneof=drop reject accept"` // drop|reject|accept
-	DstAddress            string   `json:"dst_address,omitempty"`
-	DstAddressIPV6        string   `json:"dst_address_ipv6,omitempty"`
-	DstFirewallGroupIDs   []string `json:"dst_firewallgroup_ids,omitempty" validate:"omitempty,w_regex"`           // [\d\w]+
-	DstNetworkID          string   `json:"dst_networkconf_id" validate:"omitempty,w_regex"`                        // [\d\w]+|^$
-	DstNetworkType        string   `json:"dst_networkconf_type,omitempty" validate:"omitempty,oneof=ADDRv4 NETv4"` // ADDRv4|NETv4
-	DstPort               string   `json:"dst_port,omitempty"`
-	Enabled               bool     `json:"enabled"`
-	ICMPTypename          string   `json:"icmp_typename" validate:"omitempty,oneof=address-mask-reply address-mask-request any communication-prohibited destination-unreachable echo-reply echo-request fragmentation-needed host-precedence-violation host-prohibited host-redirect host-unknown host-unreachable ip-header-bad network-prohibited network-redirect network-unknown network-unreachable parameter-problem port-unreachable precedence-cutoff protocol-unreachable redirect required-option-missing router-advertisement router-solicitation source-quench source-route-failed time-exceeded timestamp-reply timestamp-request TOS-host-redirect TOS-host-unreachable TOS-network-redirect TOS-network-unreachable ttl-zero-during-reassembly ttl-zero-during-transit"` // ^$|address-mask-reply|address-mask-request|any|communication-prohibited|destination-unreachable|echo-reply|echo-request|fragmentation-needed|host-precedence-violation|host-prohibited|host-redirect|host-unknown|host-unreachable|ip-header-bad|network-prohibited|network-redirect|network-unknown|network-unreachable|parameter-problem|port-unreachable|precedence-cutoff|protocol-unreachable|redirect|required-option-missing|router-advertisement|router-solicitation|source-quench|source-route-failed|time-exceeded|timestamp-reply|timestamp-request|TOS-host-redirect|TOS-host-unreachable|TOS-network-redirect|TOS-network-unreachable|ttl-zero-during-reassembly|ttl-zero-during-transit
-	ICMPv6Typename        string   `json:"icmpv6_typename" validate:"omitempty,oneof=address-unreachable bad-header beyond-scope communication-prohibited destination-unreachable echo-reply echo-request failed-policy neighbor-advertisement neighbor-solicitation no-route packet-too-big parameter-problem port-unreachable redirect reject-route router-advertisement router-solicitation time-exceeded ttl-zero-during-reassembly ttl-zero-during-transit unknown-header-type unknown-option"`                                                                                                                                                                                                                                                                                    // ^$|address-unreachable|bad-header|beyond-scope|communication-prohibited|destination-unreachable|echo-reply|echo-request|failed-policy|neighbor-advertisement|neighbor-solicitation|no-route|packet-too-big|parameter-problem|port-unreachable|redirect|reject-route|router-advertisement|router-solicitation|time-exceeded|ttl-zero-during-reassembly|ttl-zero-during-transit|unknown-header-type|unknown-option
-	IPSec                 string   `json:"ipsec" validate:"omitempty,oneof=match-ipsec match-none"`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     // match-ipsec|match-none|^$
-	Logging               bool     `json:"logging"`
-	Name                  string   `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
-	Protocol              string   `json:"protocol"`                                          // ^$|all|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|tcp_udp|ah|ax.25|dccp|ddp|egp|eigrp|encap|esp|etherip|fc|ggp|gre|hip|hmp|icmp|idpr-cmtp|idrp|igmp|igp|ip|ipcomp|ipencap|ipip|ipv6|ipv6-frag|ipv6-icmp|ipv6-nonxt|ipv6-opts|ipv6-route|isis|iso-tp4|l2tp|manet|mobility-header|mpls-in-ip|ospf|pim|pup|rdp|rohc|rspf|rsvp|sctp|shim6|skip|st|tcp|udp|udplite|vmtp|vrrp|wesp|xns-idp|xtp
-	ProtocolMatchExcepted bool     `json:"protocol_match_excepted"`
-	ProtocolV6            string   `json:"protocol_v6"`                                                                                                                                                                                                                      // ^$|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|ah|all|dccp|eigrp|esp|gre|icmpv6|ipcomp|ipv6|ipv6-frag|ipv6-icmp|ipv6-nonxt|ipv6-opts|ipv6-route|isis|l2tp|manet|mobility-header|mpls-in-ip|ospf|pim|rsvp|sctp|shim6|tcp|tcp_udp|udp|vrrp
-	RuleIndex             int      `json:"rule_index,omitempty"`                                                                                                                                                                                                             // 2[0-9]{3,4}|4[0-9]{3,4}
-	Ruleset               string   `json:"ruleset,omitempty" validate:"omitempty,oneof=WAN_IN WAN_OUT WAN_LOCAL LAN_IN LAN_OUT LAN_LOCAL GUEST_IN GUEST_OUT GUEST_LOCAL WANv6_IN WANv6_OUT WANv6_LOCAL LANv6_IN LANv6_OUT LANv6_LOCAL GUESTv6_IN GUESTv6_OUT GUESTv6_LOCAL"` // WAN_IN|WAN_OUT|WAN_LOCAL|LAN_IN|LAN_OUT|LAN_LOCAL|GUEST_IN|GUEST_OUT|GUEST_LOCAL|WANv6_IN|WANv6_OUT|WANv6_LOCAL|LANv6_IN|LANv6_OUT|LANv6_LOCAL|GUESTv6_IN|GUESTv6_OUT|GUESTv6_LOCAL
-	SettingPreference     string   `json:"setting_preference,omitempty" validate:"omitempty,oneof=auto manual"`                                                                                                                                                              // auto|manual
-	SrcAddress            string   `json:"src_address,omitempty"`
-	SrcAddressIPV6        string   `json:"src_address_ipv6,omitempty"`
-	SrcFirewallGroupIDs   []string `json:"src_firewallgroup_ids,omitempty" validate:"omitempty,w_regex"`           // [\d\w]+
-	SrcMACAddress         string   `json:"src_mac_address" validate:"omitempty,mac"`                               // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$|^$
-	SrcNetworkID          string   `json:"src_networkconf_id" validate:"omitempty,w_regex"`                        // [\d\w]+|^$
-	SrcNetworkType        string   `json:"src_networkconf_type,omitempty" validate:"omitempty,oneof=ADDRv4 NETv4"` // ADDRv4|NETv4
-	SrcPort               string   `json:"src_port,omitempty"`
-	StateEstablished      bool     `json:"state_established"`
-	StateInvalid          bool     `json:"state_invalid"`
-	StateNew              bool     `json:"state_new"`
-	StateRelated          bool     `json:"state_related"`
+	Action                string                     `json:"action,omitempty" validate:"omitempty,oneof=drop reject accept"` // drop|reject|accept
+	DstAddress            string                     `json:"dst_address,omitempty"`
+	DstAddressIPV6        string                     `json:"dst_address_ipv6,omitempty"`
+	DstFirewallGroupIDs   []string                   `json:"dst_firewallgroup_ids,omitempty" validate:"omitempty,w_regex"`           // [\d\w]+
+	DstNetworkID          string                     `json:"dst_networkconf_id" validate:"omitempty,w_regex"`                        // [\d\w]+|^$
+	DstNetworkType        string                     `json:"dst_networkconf_type,omitempty" validate:"omitempty,oneof=ADDRv4 NETv4"` // ADDRv4|NETv4
+	DstPort               string                     `json:"dst_port,omitempty"`
+	Enabled               bool                       `json:"enabled"`
+	ICMPTypename          string                     `json:"icmp_typename" validate:"omitempty,oneof=address-mask-reply address-mask-request any communication-prohibited destination-unreachable echo-reply echo-request fragmentation-needed host-precedence-violation host-prohibited host-redirect host-unknown host-unreachable ip-header-bad network-prohibited network-redirect network-unknown network-unreachable parameter-problem port-unreachable precedence-cutoff protocol-unreachable redirect required-option-missing router-advertisement router-solicitation source-quench source-route-failed time-exceeded timestamp-reply timestamp-request TOS-host-redirect TOS-host-unreachable TOS-network-redirect TOS-network-unreachable ttl-zero-during-reassembly ttl-zero-during-transit"` // ^$|address-mask-reply|address-mask-request|any|communication-prohibited|destination-unreachable|echo-reply|echo-request|fragmentation-needed|host-precedence-violation|host-prohibited|host-redirect|host-unknown|host-unreachable|ip-header-bad|network-prohibited|network-redirect|network-unknown|network-unreachable|parameter-problem|port-unreachable|precedence-cutoff|protocol-unreachable|redirect|required-option-missing|router-advertisement|router-solicitation|source-quench|source-route-failed|time-exceeded|timestamp-reply|timestamp-request|TOS-host-redirect|TOS-host-unreachable|TOS-network-redirect|TOS-network-unreachable|ttl-zero-during-reassembly|ttl-zero-during-transit
+	ICMPv6Typename        string                     `json:"icmpv6_typename" validate:"omitempty,oneof=address-unreachable bad-header beyond-scope communication-prohibited destination-unreachable echo-reply echo-request failed-policy neighbor-advertisement neighbor-solicitation no-route packet-too-big parameter-problem port-unreachable redirect reject-route router-advertisement router-solicitation time-exceeded ttl-zero-during-reassembly ttl-zero-during-transit unknown-header-type unknown-option"`                                                                                                                                                                                                                                                                                    // ^$|address-unreachable|bad-header|beyond-scope|communication-prohibited|destination-unreachable|echo-reply|echo-request|failed-policy|neighbor-advertisement|neighbor-solicitation|no-route|packet-too-big|parameter-problem|port-unreachable|redirect|reject-route|router-advertisement|router-solicitation|time-exceeded|ttl-zero-during-reassembly|ttl-zero-during-transit|unknown-header-type|unknown-option
+	IPSec                 string                     `json:"ipsec" validate:"omitempty,oneof=match-ipsec match-none"`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     // match-ipsec|match-none|^$
+	Logging               bool                       `json:"logging"`
+	Name                  string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	Protocol              string                     `json:"protocol"`                                          // ^$|all|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|tcp_udp|ah|ax.25|dccp|ddp|egp|eigrp|encap|esp|etherip|fc|ggp|gre|hip|hmp|icmp|idpr-cmtp|idrp|igmp|igp|ip|ipcomp|ipencap|ipip|ipv6|ipv6-frag|ipv6-icmp|ipv6-nonxt|ipv6-opts|ipv6-route|isis|iso-tp4|l2tp|manet|mobility-header|mpls-in-ip|ospf|pim|pup|rdp|rohc|rspf|rsvp|sctp|shim6|skip|st|tcp|udp|udplite|vmtp|vrrp|wesp|xns-idp|xtp
+	ProtocolMatchExcepted bool                       `json:"protocol_match_excepted"`
+	ProtocolV6            string                     `json:"protocol_v6"`                                                                                                                                                                                                                      // ^$|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|ah|all|dccp|eigrp|esp|gre|icmpv6|ipcomp|ipv6|ipv6-frag|ipv6-icmp|ipv6-nonxt|ipv6-opts|ipv6-route|isis|l2tp|manet|mobility-header|mpls-in-ip|ospf|pim|rsvp|sctp|shim6|tcp|tcp_udp|udp|vrrp
+	RuleIndex             int                        `json:"rule_index,omitempty"`                                                                                                                                                                                                             // 2[0-9]{3,4}|4[0-9]{3,4}
+	Ruleset               string                     `json:"ruleset,omitempty" validate:"omitempty,oneof=WAN_IN WAN_OUT WAN_LOCAL LAN_IN LAN_OUT LAN_LOCAL GUEST_IN GUEST_OUT GUEST_LOCAL WANv6_IN WANv6_OUT WANv6_LOCAL LANv6_IN LANv6_OUT LANv6_LOCAL GUESTv6_IN GUESTv6_OUT GUESTv6_LOCAL"` // WAN_IN|WAN_OUT|WAN_LOCAL|LAN_IN|LAN_OUT|LAN_LOCAL|GUEST_IN|GUEST_OUT|GUEST_LOCAL|WANv6_IN|WANv6_OUT|WANv6_LOCAL|LANv6_IN|LANv6_OUT|LANv6_LOCAL|GUESTv6_IN|GUESTv6_OUT|GUESTv6_LOCAL
+	SettingPreference     string                     `json:"setting_preference,omitempty" validate:"omitempty,oneof=auto manual"`                                                                                                                                                              // auto|manual
+	SrcAddress            string                     `json:"src_address,omitempty"`
+	SrcAddressIPV6        string                     `json:"src_address_ipv6,omitempty"`
+	SrcFirewallGroupIDs   []string                   `json:"src_firewallgroup_ids,omitempty" validate:"omitempty,w_regex"`           // [\d\w]+
+	SrcMACAddress         string                     `json:"src_mac_address" validate:"omitempty,mac"`                               // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$|^$
+	SrcNetworkID          string                     `json:"src_networkconf_id" validate:"omitempty,w_regex"`                        // [\d\w]+|^$
+	SrcNetworkType        string                     `json:"src_networkconf_type,omitempty" validate:"omitempty,oneof=ADDRv4 NETv4"` // ADDRv4|NETv4
+	SrcPort               string                     `json:"src_port,omitempty"`
+	StateEstablished      bool                       `json:"state_established"`
+	StateInvalid          bool                       `json:"state_invalid"`
+	StateNew              bool                       `json:"state_new"`
+	StateRelated          bool                       `json:"state_related"`
+	AdditionalFields      map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *FirewallRule) UnmarshalJSON(b []byte) error {
@@ -76,6 +77,51 @@ func (dst *FirewallRule) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *FirewallRule) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                     {},
+		"site_id":                 {},
+		"attr_hidden":             {},
+		"attr_hidden_id":          {},
+		"attr_no_delete":          {},
+		"attr_no_edit":            {},
+		"action":                  {},
+		"dst_address":             {},
+		"dst_address_ipv6":        {},
+		"dst_firewallgroup_ids":   {},
+		"dst_networkconf_id":      {},
+		"dst_networkconf_type":    {},
+		"dst_port":                {},
+		"enabled":                 {},
+		"icmp_typename":           {},
+		"icmpv6_typename":         {},
+		"ipsec":                   {},
+		"logging":                 {},
+		"name":                    {},
+		"protocol":                {},
+		"protocol_match_excepted": {},
+		"protocol_v6":             {},
+		"rule_index":              {},
+		"ruleset":                 {},
+		"setting_preference":      {},
+		"src_address":             {},
+		"src_address_ipv6":        {},
+		"src_firewallgroup_ids":   {},
+		"src_mac_address":         {},
+		"src_networkconf_id":      {},
+		"src_networkconf_type":    {},
+		"src_port":                {},
+		"state_established":       {},
+		"state_invalid":           {},
+		"state_new":               {},
+		"state_related":           {},
+	}
+}
+
+func (dst *FirewallRule) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listFirewallRule(ctx context.Context, site string) ([]FirewallRule, error) {
 	var respBody struct {
 		Meta Meta           `json:"meta"`
@@ -91,12 +137,22 @@ func (c *client) listFirewallRule(ctx context.Context, site string) ([]FirewallR
 }
 
 func (c *client) getFirewallRule(ctx context.Context, site, id string) (*FirewallRule, error) {
+	path := fmt.Sprintf("s/%s/rest/firewallrule/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item FirewallRule
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta           `json:"meta"`
 		Data []FirewallRule `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/firewallrule/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +179,10 @@ func (c *client) createFirewallRule(ctx context.Context, site string, d *Firewal
 		Data []FirewallRule `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/firewallrule", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/firewallrule", site), struct {
+		*FirewallRule
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{FirewallRule: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +202,10 @@ func (c *client) updateFirewallRule(ctx context.Context, site string, d *Firewal
 		Data []FirewallRule `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/firewallrule/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/firewallrule/%s", site, d.ID), struct {
+		*FirewallRule
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{FirewallRule: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

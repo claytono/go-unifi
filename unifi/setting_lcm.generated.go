@@ -29,11 +29,12 @@ type SettingLcm struct {
 
 	Key string `json:"key"`
 
-	Brightness  int  `json:"brightness,omitempty"` // [1-9]|[1-9][0-9]|100
-	Enabled     bool `json:"enabled"`
-	IDleTimeout int  `json:"idle_timeout,omitempty"` // [1-9][0-9]|[1-9][0-9][0-9]|[1-2][0-9][0-9][0-9]|3[0-5][0-9][0-9]|3600
-	Sync        bool `json:"sync"`
-	TouchEvent  bool `json:"touch_event"`
+	Brightness       int                        `json:"brightness,omitempty"` // [1-9]|[1-9][0-9]|100
+	Enabled          bool                       `json:"enabled"`
+	IDleTimeout      int                        `json:"idle_timeout,omitempty"` // [1-9][0-9]|[1-9][0-9][0-9]|[1-2][0-9][0-9][0-9]|3[0-5][0-9][0-9]|3600
+	Sync             bool                       `json:"sync"`
+	TouchEvent       bool                       `json:"touch_event"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingLcm) UnmarshalJSON(b []byte) error {
@@ -57,6 +58,25 @@ func (dst *SettingLcm) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingLcm) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"brightness":     {},
+		"enabled":        {},
+		"idle_timeout":   {},
+		"sync":           {},
+		"touch_event":    {},
+	}
+}
+
+func (dst *SettingLcm) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 // GetSettingLcm Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingLcm(ctx context.Context, site string) (*SettingLcm, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingLcmKey)
@@ -72,7 +92,10 @@ func (c *client) GetSettingLcm(ctx context.Context, site string) (*SettingLcm, e
 // UpdateSettingLcm Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingLcm(ctx context.Context, site string, s *SettingLcm) (*SettingLcm, error) {
 	s.Key = SettingLcmKey
-	result, err := c.SetSetting(ctx, site, SettingLcmKey, s)
+	result, err := c.SetSetting(ctx, site, SettingLcmKey, struct {
+		*SettingLcm
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingLcm: s})
 	if err != nil {
 		return nil, err
 	}

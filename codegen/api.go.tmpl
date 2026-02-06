@@ -43,6 +43,7 @@ const {{ .StructName }}Key = "{{ .ResourcePath }}"
 type {{ $k }} struct {
 	{{ range $fk, $fv := $v.Fields }}{{ if not $fv }}
 	{{ else }}{{- template "field" $fv }}{{ end }}{{ end }}
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *{{ $k }}) UnmarshalJSON(b []byte) error {
@@ -66,6 +67,17 @@ func (dst *{{ $k }}) UnmarshalJSON(b []byte) error {
 
 	return nil
 }
+
+func (dst *{{ $k }}) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		{{- range $fk, $fv := $v.Fields }}{{ if $fv }}
+		"{{ $fv.JSONName }}": {},
+		{{- end }}{{ end }}
+	}
+}
+
+func (dst *{{ $k }}) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 {{ end }}
 
 {{ if not .IsSetting }}
@@ -98,12 +110,22 @@ func (c *client) Get{{ .StructName }}(ctx context.Context, site string) (*{{ .St
 }
 {{- else }}
 func (c *client) get{{ .StructName }}(ctx context.Context, site, id string) (*{{ .StructName }}, error) {
+	path := fmt.Sprintf("s/%s/{{ if eq .StructName "Device" }}stat{{ else }}rest{{ end }}/{{ .ResourcePath }}/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item {{ .StructName }}
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta `json:"meta"`
 		Data []{{ .StructName }} `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/{{ if eq .StructName "Device" }}stat{{ else }}rest{{ end }}/{{ .ResourcePath }}/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -126,13 +148,20 @@ func (c *client) delete{{ .StructName }}(ctx context.Context, site, id string) e
 	return nil
 }
 
+{{/* Wrap d in an anonymous struct that shadows AdditionalFields with a nil *struct{}.
+     This prevents _additional_properties from being sent to the controller without
+     mutating the caller's struct or copying it. The embedded pointer gives access to
+     all other fields. */ -}}
 func (c *client) create{{ .StructName }}(ctx context.Context, site string, d *{{ .StructName }}) (*{{ .StructName }}, error) {
 	var respBody struct {
 		Meta Meta      `json:"meta"`
 		Data []{{ .StructName }} `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/{{ .ResourcePath }}", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/{{ .ResourcePath }}", site), struct {
+		*{{ .StructName }}
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{ {{ .StructName }}: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +180,10 @@ func (c *client) create{{ .StructName }}(ctx context.Context, site string, d *{{
 // Update{{ .StructName }} Experimental! This function is not yet stable and may change in the future.
 func (c *client) Update{{ .StructName }}(ctx context.Context, site string, s *{{ .StructName}}) (*{{ .StructName }}, error) {
     s.Key = {{ .StructName }}Key
-    result, err := c.SetSetting(ctx, site, {{ .StructName }}Key, s)
+    result, err := c.SetSetting(ctx, site, {{ .StructName }}Key, struct {
+		*{{ .StructName }}
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{ {{ .StructName }}: s})
     if err != nil {
     	return nil, err
     }
@@ -166,7 +198,10 @@ func (c *client) update{{ .StructName }}(ctx context.Context, site string, d *{{
 		Data []{{ .StructName }} `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/{{ .ResourcePath }}/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/{{ .ResourcePath }}/%s", site, d.ID), struct {
+		*{{ .StructName }}
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{ {{ .StructName }}: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

@@ -29,7 +29,8 @@ type SettingLocale struct {
 
 	Key string `json:"key"`
 
-	Timezone string `json:"timezone,omitempty"`
+	Timezone         string                     `json:"timezone,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingLocale) UnmarshalJSON(b []byte) error {
@@ -48,6 +49,23 @@ func (dst *SettingLocale) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingLocale) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"timezone":       {},
+	}
+}
+
+func (dst *SettingLocale) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingLocale Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingLocale(ctx context.Context, site string) (*SettingLocale, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingLocaleKey)
@@ -63,7 +81,10 @@ func (c *client) GetSettingLocale(ctx context.Context, site string) (*SettingLoc
 // UpdateSettingLocale Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingLocale(ctx context.Context, site string, s *SettingLocale) (*SettingLocale, error) {
 	s.Key = SettingLocaleKey
-	result, err := c.SetSetting(ctx, site, SettingLocaleKey, s)
+	result, err := c.SetSetting(ctx, site, SettingLocaleKey, struct {
+		*SettingLocale
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingLocale: s})
 	if err != nil {
 		return nil, err
 	}

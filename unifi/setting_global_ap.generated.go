@@ -29,16 +29,17 @@ type SettingGlobalAp struct {
 
 	Key string `json:"key"`
 
-	ApExclusions    []string `json:"ap_exclusions,omitempty" validate:"omitempty,mac"`                                  // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
-	NaChannelSize   int      `json:"na_channel_size,omitempty" validate:"omitempty,oneof=20 40 80 160"`                 // 20|40|80|160
-	NaTxPower       int      `json:"na_tx_power,omitempty"`                                                             // [0-9]|[1-4][0-9]
-	NaTxPowerMode   string   `json:"na_tx_power_mode,omitempty" validate:"omitempty,oneof=auto medium high low custom"` // auto|medium|high|low|custom
-	NgChannelSize   int      `json:"ng_channel_size,omitempty" validate:"omitempty,oneof=20 40"`                        // 20|40
-	NgTxPower       int      `json:"ng_tx_power,omitempty"`                                                             // [0-9]|[1-4][0-9]
-	NgTxPowerMode   string   `json:"ng_tx_power_mode,omitempty" validate:"omitempty,oneof=auto medium high low custom"` // auto|medium|high|low|custom
-	SixEChannelSize int      `json:"6e_channel_size,omitempty" validate:"omitempty,oneof=20 40 80 160"`                 // 20|40|80|160
-	SixETxPower     int      `json:"6e_tx_power,omitempty"`                                                             // [0-9]|[1-4][0-9]
-	SixETxPowerMode string   `json:"6e_tx_power_mode,omitempty" validate:"omitempty,oneof=auto medium high low custom"` // auto|medium|high|low|custom
+	ApExclusions     []string                   `json:"ap_exclusions,omitempty" validate:"omitempty,mac"`                                  // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
+	NaChannelSize    int                        `json:"na_channel_size,omitempty" validate:"omitempty,oneof=20 40 80 160"`                 // 20|40|80|160
+	NaTxPower        int                        `json:"na_tx_power,omitempty"`                                                             // [0-9]|[1-4][0-9]
+	NaTxPowerMode    string                     `json:"na_tx_power_mode,omitempty" validate:"omitempty,oneof=auto medium high low custom"` // auto|medium|high|low|custom
+	NgChannelSize    int                        `json:"ng_channel_size,omitempty" validate:"omitempty,oneof=20 40"`                        // 20|40
+	NgTxPower        int                        `json:"ng_tx_power,omitempty"`                                                             // [0-9]|[1-4][0-9]
+	NgTxPowerMode    string                     `json:"ng_tx_power_mode,omitempty" validate:"omitempty,oneof=auto medium high low custom"` // auto|medium|high|low|custom
+	SixEChannelSize  int                        `json:"6e_channel_size,omitempty" validate:"omitempty,oneof=20 40 80 160"`                 // 20|40|80|160
+	SixETxPower      int                        `json:"6e_tx_power,omitempty"`                                                             // [0-9]|[1-4][0-9]
+	SixETxPowerMode  string                     `json:"6e_tx_power_mode,omitempty" validate:"omitempty,oneof=auto medium high low custom"` // auto|medium|high|low|custom
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingGlobalAp) UnmarshalJSON(b []byte) error {
@@ -70,6 +71,32 @@ func (dst *SettingGlobalAp) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingGlobalAp) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":              {},
+		"site_id":          {},
+		"attr_hidden":      {},
+		"attr_hidden_id":   {},
+		"attr_no_delete":   {},
+		"attr_no_edit":     {},
+		"key":              {},
+		"ap_exclusions":    {},
+		"na_channel_size":  {},
+		"na_tx_power":      {},
+		"na_tx_power_mode": {},
+		"ng_channel_size":  {},
+		"ng_tx_power":      {},
+		"ng_tx_power_mode": {},
+		"6e_channel_size":  {},
+		"6e_tx_power":      {},
+		"6e_tx_power_mode": {},
+	}
+}
+
+func (dst *SettingGlobalAp) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingGlobalAp Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingGlobalAp(ctx context.Context, site string) (*SettingGlobalAp, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingGlobalApKey)
@@ -85,7 +112,10 @@ func (c *client) GetSettingGlobalAp(ctx context.Context, site string) (*SettingG
 // UpdateSettingGlobalAp Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingGlobalAp(ctx context.Context, site string, s *SettingGlobalAp) (*SettingGlobalAp, error) {
 	s.Key = SettingGlobalApKey
-	result, err := c.SetSetting(ctx, site, SettingGlobalApKey, s)
+	result, err := c.SetSetting(ctx, site, SettingGlobalApKey, struct {
+		*SettingGlobalAp
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingGlobalAp: s})
 	if err != nil {
 		return nil, err
 	}

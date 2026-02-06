@@ -25,8 +25,9 @@ type SpatialRecord struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Devices []SpatialRecordDevices `json:"devices,omitempty"`
-	Name    string                 `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	Devices          []SpatialRecordDevices     `json:"devices,omitempty"`
+	Name             string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SpatialRecord) UnmarshalJSON(b []byte) error {
@@ -45,9 +46,27 @@ func (dst *SpatialRecord) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SpatialRecord) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"devices":        {},
+		"name":           {},
+	}
+}
+
+func (dst *SpatialRecord) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type SpatialRecordDevices struct {
-	MAC      string                `json:"mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
-	Position SpatialRecordPosition `json:"position,omitempty"`
+	MAC              string                     `json:"mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
+	Position         SpatialRecordPosition      `json:"position,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SpatialRecordDevices) UnmarshalJSON(b []byte) error {
@@ -66,10 +85,22 @@ func (dst *SpatialRecordDevices) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SpatialRecordDevices) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"mac":      {},
+		"position": {},
+	}
+}
+
+func (dst *SpatialRecordDevices) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type SpatialRecordPosition struct {
-	X float64 `json:"x,omitempty"` // (^([-]?[\d]+)$)|(^([-]?[\d]+[.]?[\d]+)$)
-	Y float64 `json:"y,omitempty"` // (^([-]?[\d]+)$)|(^([-]?[\d]+[.]?[\d]+)$)
-	Z float64 `json:"z,omitempty"` // (^([-]?[\d]+)$)|(^([-]?[\d]+[.]?[\d]+)$)
+	X                float64                    `json:"x,omitempty"` // (^([-]?[\d]+)$)|(^([-]?[\d]+[.]?[\d]+)$)
+	Y                float64                    `json:"y,omitempty"` // (^([-]?[\d]+)$)|(^([-]?[\d]+[.]?[\d]+)$)
+	Z                float64                    `json:"z,omitempty"` // (^([-]?[\d]+)$)|(^([-]?[\d]+[.]?[\d]+)$)
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SpatialRecordPosition) UnmarshalJSON(b []byte) error {
@@ -88,6 +119,18 @@ func (dst *SpatialRecordPosition) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SpatialRecordPosition) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"x": {},
+		"y": {},
+		"z": {},
+	}
+}
+
+func (dst *SpatialRecordPosition) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listSpatialRecord(ctx context.Context, site string) ([]SpatialRecord, error) {
 	var respBody struct {
 		Meta Meta            `json:"meta"`
@@ -103,12 +146,22 @@ func (c *client) listSpatialRecord(ctx context.Context, site string) ([]SpatialR
 }
 
 func (c *client) getSpatialRecord(ctx context.Context, site, id string) (*SpatialRecord, error) {
+	path := fmt.Sprintf("s/%s/rest/spatialrecord/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item SpatialRecord
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta            `json:"meta"`
 		Data []SpatialRecord `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/spatialrecord/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +188,10 @@ func (c *client) createSpatialRecord(ctx context.Context, site string, d *Spatia
 		Data []SpatialRecord `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/spatialrecord", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/spatialrecord", site), struct {
+		*SpatialRecord
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SpatialRecord: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +211,10 @@ func (c *client) updateSpatialRecord(ctx context.Context, site string, d *Spatia
 		Data []SpatialRecord `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/spatialrecord/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/spatialrecord/%s", site, d.ID), struct {
+		*SpatialRecord
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SpatialRecord: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

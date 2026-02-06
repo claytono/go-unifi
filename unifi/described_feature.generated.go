@@ -25,8 +25,9 @@ type DescribedFeature struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	FeatureExists bool   `json:"feature_exists"`
-	Name          string `json:"name,omitempty"`
+	FeatureExists    bool                       `json:"feature_exists"`
+	Name             string                     `json:"name,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *DescribedFeature) UnmarshalJSON(b []byte) error {
@@ -45,6 +46,23 @@ func (dst *DescribedFeature) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *DescribedFeature) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"feature_exists": {},
+		"name":           {},
+	}
+}
+
+func (dst *DescribedFeature) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listDescribedFeature(ctx context.Context, site string) ([]DescribedFeature, error) {
 	var respBody []DescribedFeature
 
@@ -57,9 +75,22 @@ func (c *client) listDescribedFeature(ctx context.Context, site string) ([]Descr
 }
 
 func (c *client) getDescribedFeature(ctx context.Context, site, id string) (*DescribedFeature, error) {
+	path := fmt.Sprintf("%s/site/%s/described-features?includeSystemFeatures=true/%s", c.apiPaths.ApiV2Path, site, id)
+
+	if c.includeAdditionalFields {
+		var item DescribedFeature
+		if err := c.getWithAdditionalFieldsV2(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		if item.ID == "" {
+			return nil, ErrNotFound
+		}
+		return &item, nil
+	}
+
 	var respBody DescribedFeature
 
-	err := c.Get(ctx, fmt.Sprintf("%s/site/%s/described-features?includeSystemFeatures=true/%s", c.apiPaths.ApiV2Path, site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 
 	if err != nil {
 		return nil, err
@@ -81,7 +112,10 @@ func (c *client) deleteDescribedFeature(ctx context.Context, site, id string) er
 func (c *client) createDescribedFeature(ctx context.Context, site string, d *DescribedFeature) (*DescribedFeature, error) {
 	var respBody DescribedFeature
 
-	err := c.Post(ctx, fmt.Sprintf("%s/site/%s/described-features?includeSystemFeatures=true", c.apiPaths.ApiV2Path, site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("%s/site/%s/described-features?includeSystemFeatures=true", c.apiPaths.ApiV2Path, site), struct {
+		*DescribedFeature
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{DescribedFeature: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +126,10 @@ func (c *client) createDescribedFeature(ctx context.Context, site string, d *Des
 func (c *client) updateDescribedFeature(ctx context.Context, site string, d *DescribedFeature) (*DescribedFeature, error) {
 	var respBody DescribedFeature
 
-	err := c.Put(ctx, fmt.Sprintf("%s/site/%s/described-features?includeSystemFeatures=true/%s", c.apiPaths.ApiV2Path, site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("%s/site/%s/described-features?includeSystemFeatures=true/%s", c.apiPaths.ApiV2Path, site, d.ID), struct {
+		*DescribedFeature
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{DescribedFeature: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

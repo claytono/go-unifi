@@ -173,5 +173,13 @@ func (c *client) GetSetting(ctx context.Context, site, key string) (*Setting, in
 		return nil, nil, fmt.Errorf("unable to decode get setting fields %s: %w", key, err)
 	}
 
+	if c.includeAdditionalFields {
+		if capable, ok := fields.(AdditionalFieldsCapable); ok {
+			if err := CaptureAdditionalFields(capable, raw); err != nil {
+				return nil, nil, fmt.Errorf("unable to capture additional fields for setting %s: %w", key, err)
+			}
+		}
+	}
+
 	return setting, fields, nil
 }

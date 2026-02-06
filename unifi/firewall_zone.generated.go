@@ -25,8 +25,9 @@ type FirewallZone struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Name       string   `json:"name,omitempty"`
-	NetworkIDs []string `json:"network_ids"`
+	Name             string                     `json:"name,omitempty"`
+	NetworkIDs       []string                   `json:"network_ids"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *FirewallZone) UnmarshalJSON(b []byte) error {
@@ -45,6 +46,23 @@ func (dst *FirewallZone) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *FirewallZone) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"name":           {},
+		"network_ids":    {},
+	}
+}
+
+func (dst *FirewallZone) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listFirewallZone(ctx context.Context, site string) ([]FirewallZone, error) {
 	var respBody []FirewallZone
 
@@ -57,9 +75,22 @@ func (c *client) listFirewallZone(ctx context.Context, site string) ([]FirewallZ
 }
 
 func (c *client) getFirewallZone(ctx context.Context, site, id string) (*FirewallZone, error) {
+	path := fmt.Sprintf("%s/site/%s/firewall/zone/%s", c.apiPaths.ApiV2Path, site, id)
+
+	if c.includeAdditionalFields {
+		var item FirewallZone
+		if err := c.getWithAdditionalFieldsV2(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		if item.ID == "" {
+			return nil, ErrNotFound
+		}
+		return &item, nil
+	}
+
 	var respBody FirewallZone
 
-	err := c.Get(ctx, fmt.Sprintf("%s/site/%s/firewall/zone/%s", c.apiPaths.ApiV2Path, site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 
 	if err != nil {
 		return nil, err
@@ -81,7 +112,10 @@ func (c *client) deleteFirewallZone(ctx context.Context, site, id string) error 
 func (c *client) createFirewallZone(ctx context.Context, site string, d *FirewallZone) (*FirewallZone, error) {
 	var respBody FirewallZone
 
-	err := c.Post(ctx, fmt.Sprintf("%s/site/%s/firewall/zone", c.apiPaths.ApiV2Path, site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("%s/site/%s/firewall/zone", c.apiPaths.ApiV2Path, site), struct {
+		*FirewallZone
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{FirewallZone: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +126,10 @@ func (c *client) createFirewallZone(ctx context.Context, site string, d *Firewal
 func (c *client) updateFirewallZone(ctx context.Context, site string, d *FirewallZone) (*FirewallZone, error) {
 	var respBody FirewallZone
 
-	err := c.Put(ctx, fmt.Sprintf("%s/site/%s/firewall/zone/%s", c.apiPaths.ApiV2Path, site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("%s/site/%s/firewall/zone/%s", c.apiPaths.ApiV2Path, site, d.ID), struct {
+		*FirewallZone
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{FirewallZone: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

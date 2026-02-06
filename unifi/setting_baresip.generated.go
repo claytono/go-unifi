@@ -29,10 +29,11 @@ type SettingBaresip struct {
 
 	Key string `json:"key"`
 
-	Enabled       bool   `json:"enabled"`
-	OutboundProxy string `json:"outbound_proxy,omitempty"`
-	PackageUrl    string `json:"package_url,omitempty"`
-	Server        string `json:"server,omitempty"`
+	Enabled          bool                       `json:"enabled"`
+	OutboundProxy    string                     `json:"outbound_proxy,omitempty"`
+	PackageUrl       string                     `json:"package_url,omitempty"`
+	Server           string                     `json:"server,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingBaresip) UnmarshalJSON(b []byte) error {
@@ -51,6 +52,26 @@ func (dst *SettingBaresip) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingBaresip) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"enabled":        {},
+		"outbound_proxy": {},
+		"package_url":    {},
+		"server":         {},
+	}
+}
+
+func (dst *SettingBaresip) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingBaresip Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingBaresip(ctx context.Context, site string) (*SettingBaresip, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingBaresipKey)
@@ -66,7 +87,10 @@ func (c *client) GetSettingBaresip(ctx context.Context, site string) (*SettingBa
 // UpdateSettingBaresip Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingBaresip(ctx context.Context, site string, s *SettingBaresip) (*SettingBaresip, error) {
 	s.Key = SettingBaresipKey
-	result, err := c.SetSetting(ctx, site, SettingBaresipKey, s)
+	result, err := c.SetSetting(ctx, site, SettingBaresipKey, struct {
+		*SettingBaresip
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingBaresip: s})
 	if err != nil {
 		return nil, err
 	}

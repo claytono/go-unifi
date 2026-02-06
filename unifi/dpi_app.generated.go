@@ -25,14 +25,15 @@ type DpiApp struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Apps           []int  `json:"apps,omitempty"`
-	Blocked        bool   `json:"blocked"`
-	Cats           []int  `json:"cats,omitempty"`
-	Enabled        bool   `json:"enabled"`
-	Log            bool   `json:"log"`
-	Name           string `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
-	QOSRateMaxDown int    `json:"qos_rate_max_down,omitempty"`                       // -1|[2-9]|[1-9][0-9]{1,4}|100000|10[0-1][0-9]{3}|102[0-3][0-9]{2}|102400
-	QOSRateMaxUp   int    `json:"qos_rate_max_up,omitempty"`                         // -1|[2-9]|[1-9][0-9]{1,4}|100000|10[0-1][0-9]{3}|102[0-3][0-9]{2}|102400
+	Apps             []int                      `json:"apps,omitempty"`
+	Blocked          bool                       `json:"blocked"`
+	Cats             []int                      `json:"cats,omitempty"`
+	Enabled          bool                       `json:"enabled"`
+	Log              bool                       `json:"log"`
+	Name             string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	QOSRateMaxDown   int                        `json:"qos_rate_max_down,omitempty"`                       // -1|[2-9]|[1-9][0-9]{1,4}|100000|10[0-1][0-9]{3}|102[0-3][0-9]{2}|102400
+	QOSRateMaxUp     int                        `json:"qos_rate_max_up,omitempty"`                         // -1|[2-9]|[1-9][0-9]{1,4}|100000|10[0-1][0-9]{3}|102[0-3][0-9]{2}|102400
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *DpiApp) UnmarshalJSON(b []byte) error {
@@ -66,6 +67,27 @@ func (dst *DpiApp) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *DpiApp) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":               {},
+		"site_id":           {},
+		"attr_hidden":       {},
+		"attr_hidden_id":    {},
+		"attr_no_delete":    {},
+		"attr_no_edit":      {},
+		"apps":              {},
+		"blocked":           {},
+		"cats":              {},
+		"enabled":           {},
+		"log":               {},
+		"name":              {},
+		"qos_rate_max_down": {},
+		"qos_rate_max_up":   {},
+	}
+}
+
+func (dst *DpiApp) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 func (c *client) listDpiApp(ctx context.Context, site string) ([]DpiApp, error) {
 	var respBody struct {
 		Meta Meta     `json:"meta"`
@@ -81,12 +103,22 @@ func (c *client) listDpiApp(ctx context.Context, site string) ([]DpiApp, error) 
 }
 
 func (c *client) getDpiApp(ctx context.Context, site, id string) (*DpiApp, error) {
+	path := fmt.Sprintf("s/%s/rest/dpiapp/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item DpiApp
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta     `json:"meta"`
 		Data []DpiApp `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/dpiapp/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +145,10 @@ func (c *client) createDpiApp(ctx context.Context, site string, d *DpiApp) (*Dpi
 		Data []DpiApp `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/dpiapp", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/dpiapp", site), struct {
+		*DpiApp
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{DpiApp: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +168,10 @@ func (c *client) updateDpiApp(ctx context.Context, site string, d *DpiApp) (*Dpi
 		Data []DpiApp `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/dpiapp/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/dpiapp/%s", site, d.ID), struct {
+		*DpiApp
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{DpiApp: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

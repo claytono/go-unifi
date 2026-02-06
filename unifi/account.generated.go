@@ -25,16 +25,17 @@ type Account struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	FilterIDs        []string `json:"filter_ids,omitempty"`
-	IP               string   `json:"ip,omitempty" validate:"omitempty,ipv4"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^$
-	Name             string   `json:"name,omitempty"`                         // ^[^"' ]+$
-	NetworkID        string   `json:"networkconf_id,omitempty"`
-	TunnelConfigType string   `json:"tunnel_config_type,omitempty" validate:"omitempty,oneof=vpn 802.1x custom"` // vpn|802.1x|custom
-	TunnelMediumType int      `json:"tunnel_medium_type,omitempty"`                                              // [1-9]|1[0-5]|^$
-	TunnelType       int      `json:"tunnel_type,omitempty"`                                                     // [1-9]|1[0-3]|^$
-	UlpUserID        string   `json:"ulp_user_id"`
-	VLAN             int      `json:"vlan,omitempty"` // [2-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|400[0-9]|^$
-	XPassword        string   `json:"x_password,omitempty"`
+	FilterIDs        []string                   `json:"filter_ids,omitempty"`
+	IP               string                     `json:"ip,omitempty" validate:"omitempty,ipv4"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^$
+	Name             string                     `json:"name,omitempty"`                         // ^[^"' ]+$
+	NetworkID        string                     `json:"networkconf_id,omitempty"`
+	TunnelConfigType string                     `json:"tunnel_config_type,omitempty" validate:"omitempty,oneof=vpn 802.1x custom"` // vpn|802.1x|custom
+	TunnelMediumType int                        `json:"tunnel_medium_type,omitempty"`                                              // [1-9]|1[0-5]|^$
+	TunnelType       int                        `json:"tunnel_type,omitempty"`                                                     // [1-9]|1[0-3]|^$
+	UlpUserID        string                     `json:"ulp_user_id"`
+	VLAN             int                        `json:"vlan,omitempty"` // [2-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|400[0-9]|^$
+	XPassword        string                     `json:"x_password,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *Account) UnmarshalJSON(b []byte) error {
@@ -60,6 +61,29 @@ func (dst *Account) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *Account) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                {},
+		"site_id":            {},
+		"attr_hidden":        {},
+		"attr_hidden_id":     {},
+		"attr_no_delete":     {},
+		"attr_no_edit":       {},
+		"filter_ids":         {},
+		"ip":                 {},
+		"name":               {},
+		"networkconf_id":     {},
+		"tunnel_config_type": {},
+		"tunnel_medium_type": {},
+		"tunnel_type":        {},
+		"ulp_user_id":        {},
+		"vlan":               {},
+		"x_password":         {},
+	}
+}
+
+func (dst *Account) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 func (c *client) listAccount(ctx context.Context, site string) ([]Account, error) {
 	var respBody struct {
 		Meta Meta      `json:"meta"`
@@ -75,12 +99,22 @@ func (c *client) listAccount(ctx context.Context, site string) ([]Account, error
 }
 
 func (c *client) getAccount(ctx context.Context, site, id string) (*Account, error) {
+	path := fmt.Sprintf("s/%s/rest/account/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item Account
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta      `json:"meta"`
 		Data []Account `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/account/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +141,10 @@ func (c *client) createAccount(ctx context.Context, site string, d *Account) (*A
 		Data []Account `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/account", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/account", site), struct {
+		*Account
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{Account: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +164,10 @@ func (c *client) updateAccount(ctx context.Context, site string, d *Account) (*A
 		Data []Account `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/account/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/account/%s", site, d.ID), struct {
+		*Account
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{Account: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

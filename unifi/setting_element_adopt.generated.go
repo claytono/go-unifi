@@ -29,9 +29,10 @@ type SettingElementAdopt struct {
 
 	Key string `json:"key"`
 
-	Enabled       bool   `json:"enabled"`
-	XElementEssid string `json:"x_element_essid,omitempty"`
-	XElementPsk   string `json:"x_element_psk,omitempty"`
+	Enabled          bool                       `json:"enabled"`
+	XElementEssid    string                     `json:"x_element_essid,omitempty"`
+	XElementPsk      string                     `json:"x_element_psk,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingElementAdopt) UnmarshalJSON(b []byte) error {
@@ -50,6 +51,25 @@ func (dst *SettingElementAdopt) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingElementAdopt) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":             {},
+		"site_id":         {},
+		"attr_hidden":     {},
+		"attr_hidden_id":  {},
+		"attr_no_delete":  {},
+		"attr_no_edit":    {},
+		"key":             {},
+		"enabled":         {},
+		"x_element_essid": {},
+		"x_element_psk":   {},
+	}
+}
+
+func (dst *SettingElementAdopt) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingElementAdopt Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingElementAdopt(ctx context.Context, site string) (*SettingElementAdopt, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingElementAdoptKey)
@@ -65,7 +85,10 @@ func (c *client) GetSettingElementAdopt(ctx context.Context, site string) (*Sett
 // UpdateSettingElementAdopt Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingElementAdopt(ctx context.Context, site string, s *SettingElementAdopt) (*SettingElementAdopt, error) {
 	s.Key = SettingElementAdoptKey
-	result, err := c.SetSetting(ctx, site, SettingElementAdoptKey, s)
+	result, err := c.SetSetting(ctx, site, SettingElementAdoptKey, struct {
+		*SettingElementAdopt
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingElementAdopt: s})
 	if err != nil {
 		return nil, err
 	}

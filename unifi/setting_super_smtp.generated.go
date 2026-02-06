@@ -29,15 +29,16 @@ type SettingSuperSmtp struct {
 
 	Key string `json:"key"`
 
-	Enabled   bool   `json:"enabled"`
-	Host      string `json:"host,omitempty"`
-	Port      int    `json:"port,omitempty"` // [1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5]|^$
-	Sender    string `json:"sender,omitempty"`
-	UseAuth   bool   `json:"use_auth"`
-	UseSender bool   `json:"use_sender"`
-	UseSsl    bool   `json:"use_ssl"`
-	Username  string `json:"username,omitempty"`
-	XPassword string `json:"x_password,omitempty"`
+	Enabled          bool                       `json:"enabled"`
+	Host             string                     `json:"host,omitempty"`
+	Port             int                        `json:"port,omitempty"` // [1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5]|^$
+	Sender           string                     `json:"sender,omitempty"`
+	UseAuth          bool                       `json:"use_auth"`
+	UseSender        bool                       `json:"use_sender"`
+	UseSsl           bool                       `json:"use_ssl"`
+	Username         string                     `json:"username,omitempty"`
+	XPassword        string                     `json:"x_password,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingSuperSmtp) UnmarshalJSON(b []byte) error {
@@ -59,6 +60,31 @@ func (dst *SettingSuperSmtp) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingSuperSmtp) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"enabled":        {},
+		"host":           {},
+		"port":           {},
+		"sender":         {},
+		"use_auth":       {},
+		"use_sender":     {},
+		"use_ssl":        {},
+		"username":       {},
+		"x_password":     {},
+	}
+}
+
+func (dst *SettingSuperSmtp) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingSuperSmtp Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingSuperSmtp(ctx context.Context, site string) (*SettingSuperSmtp, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingSuperSmtpKey)
@@ -74,7 +100,10 @@ func (c *client) GetSettingSuperSmtp(ctx context.Context, site string) (*Setting
 // UpdateSettingSuperSmtp Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingSuperSmtp(ctx context.Context, site string, s *SettingSuperSmtp) (*SettingSuperSmtp, error) {
 	s.Key = SettingSuperSmtpKey
-	result, err := c.SetSetting(ctx, site, SettingSuperSmtpKey, s)
+	result, err := c.SetSetting(ctx, site, SettingSuperSmtpKey, struct {
+		*SettingSuperSmtp
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingSuperSmtp: s})
 	if err != nil {
 		return nil, err
 	}

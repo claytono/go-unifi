@@ -74,6 +74,7 @@ type ClientConfig struct {
 	UseLocking               bool
 	ValidationMode           ValidationMode
 	Logger                   Logger
+	IncludeAdditionalFields  bool
 }
 
 // Credentials abstracts authentication credentials.
@@ -117,13 +118,14 @@ func (u UserPassCredentials) IsRememberMe() bool { return u.Remember }
 // client represents a UniFi client.
 type client struct {
 	Logger
-	baseURL        *url.URL
-	sysInfo        *SysInfo
-	apiPaths       *APIPaths
-	timeout        time.Duration
-	credentials    Credentials
-	validationMode ValidationMode
-	useLocking     bool
+	baseURL                 *url.URL
+	sysInfo                 *SysInfo
+	apiPaths                *APIPaths
+	timeout                 time.Duration
+	credentials             Credentials
+	validationMode          ValidationMode
+	useLocking              bool
+	includeAdditionalFields bool
 
 	http         *http.Client
 	interceptors []ClientInterceptor
@@ -248,17 +250,18 @@ func newClientFromConfig(config *ClientConfig, v *validator) (*client, error) {
 	}
 	log.Tracef("Validation mode: %d", config.ValidationMode)
 	u := &client{
-		baseURL:        baseURL,
-		timeout:        config.Timeout,
-		credentials:    credentials,
-		validationMode: config.ValidationMode,
-		useLocking:     config.UseLocking,
-		http:           httpClient,
-		interceptors:   interceptors,
-		errorHandler:   errorHandler,
-		lock:           sync.Mutex{},
-		validator:      v,
-		Logger:         log,
+		baseURL:                 baseURL,
+		timeout:                 config.Timeout,
+		credentials:             credentials,
+		validationMode:          config.ValidationMode,
+		useLocking:              config.UseLocking,
+		includeAdditionalFields: config.IncludeAdditionalFields,
+		http:                    httpClient,
+		interceptors:            interceptors,
+		errorHandler:            errorHandler,
+		lock:                    sync.Mutex{},
+		validator:               v,
+		Logger:                  log,
 	}
 	for _, interceptor := range config.Interceptors {
 		u.AddInterceptor(&interceptor)

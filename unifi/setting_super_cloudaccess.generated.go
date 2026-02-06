@@ -29,13 +29,14 @@ type SettingSuperCloudaccess struct {
 
 	Key string `json:"key"`
 
-	DeviceAuth      string `json:"device_auth,omitempty"`
-	DeviceID        string `json:"device_id"`
-	Enabled         bool   `json:"enabled"`
-	UbicUuid        string `json:"ubic_uuid,omitempty"`
-	XCertificateArn string `json:"x_certificate_arn,omitempty"`
-	XCertificatePem string `json:"x_certificate_pem,omitempty"`
-	XPrivateKey     string `json:"x_private_key,omitempty"`
+	DeviceAuth       string                     `json:"device_auth,omitempty"`
+	DeviceID         string                     `json:"device_id"`
+	Enabled          bool                       `json:"enabled"`
+	UbicUuid         string                     `json:"ubic_uuid,omitempty"`
+	XCertificateArn  string                     `json:"x_certificate_arn,omitempty"`
+	XCertificatePem  string                     `json:"x_certificate_pem,omitempty"`
+	XPrivateKey      string                     `json:"x_private_key,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingSuperCloudaccess) UnmarshalJSON(b []byte) error {
@@ -54,6 +55,29 @@ func (dst *SettingSuperCloudaccess) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingSuperCloudaccess) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":               {},
+		"site_id":           {},
+		"attr_hidden":       {},
+		"attr_hidden_id":    {},
+		"attr_no_delete":    {},
+		"attr_no_edit":      {},
+		"key":               {},
+		"device_auth":       {},
+		"device_id":         {},
+		"enabled":           {},
+		"ubic_uuid":         {},
+		"x_certificate_arn": {},
+		"x_certificate_pem": {},
+		"x_private_key":     {},
+	}
+}
+
+func (dst *SettingSuperCloudaccess) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingSuperCloudaccess Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingSuperCloudaccess(ctx context.Context, site string) (*SettingSuperCloudaccess, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingSuperCloudaccessKey)
@@ -69,7 +93,10 @@ func (c *client) GetSettingSuperCloudaccess(ctx context.Context, site string) (*
 // UpdateSettingSuperCloudaccess Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingSuperCloudaccess(ctx context.Context, site string, s *SettingSuperCloudaccess) (*SettingSuperCloudaccess, error) {
 	s.Key = SettingSuperCloudaccessKey
-	result, err := c.SetSetting(ctx, site, SettingSuperCloudaccessKey, s)
+	result, err := c.SetSetting(ctx, site, SettingSuperCloudaccessKey, struct {
+		*SettingSuperCloudaccess
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingSuperCloudaccess: s})
 	if err != nil {
 		return nil, err
 	}

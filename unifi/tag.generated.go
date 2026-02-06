@@ -25,8 +25,9 @@ type Tag struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	MemberTable []string `json:"member_table,omitempty"`
-	Name        string   `json:"name,omitempty"`
+	MemberTable      []string                   `json:"member_table,omitempty"`
+	Name             string                     `json:"name,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *Tag) UnmarshalJSON(b []byte) error {
@@ -45,6 +46,21 @@ func (dst *Tag) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *Tag) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"member_table":   {},
+		"name":           {},
+	}
+}
+
+func (dst *Tag) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 func (c *client) listTag(ctx context.Context, site string) ([]Tag, error) {
 	var respBody struct {
 		Meta Meta  `json:"meta"`
@@ -60,12 +76,22 @@ func (c *client) listTag(ctx context.Context, site string) ([]Tag, error) {
 }
 
 func (c *client) getTag(ctx context.Context, site, id string) (*Tag, error) {
+	path := fmt.Sprintf("s/%s/rest/tag/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item Tag
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta  `json:"meta"`
 		Data []Tag `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/tag/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +118,10 @@ func (c *client) createTag(ctx context.Context, site string, d *Tag) (*Tag, erro
 		Data []Tag `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/tag", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/tag", site), struct {
+		*Tag
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{Tag: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +141,10 @@ func (c *client) updateTag(ctx context.Context, site string, d *Tag) (*Tag, erro
 		Data []Tag `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/tag/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/tag/%s", site, d.ID), struct {
+		*Tag
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{Tag: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

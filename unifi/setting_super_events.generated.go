@@ -29,7 +29,8 @@ type SettingSuperEvents struct {
 
 	Key string `json:"key"`
 
-	Ignored string `json:"_ignored,omitempty"`
+	Ignored          string                     `json:"_ignored,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingSuperEvents) UnmarshalJSON(b []byte) error {
@@ -48,6 +49,23 @@ func (dst *SettingSuperEvents) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingSuperEvents) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"_ignored":       {},
+	}
+}
+
+func (dst *SettingSuperEvents) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingSuperEvents Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingSuperEvents(ctx context.Context, site string) (*SettingSuperEvents, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingSuperEventsKey)
@@ -63,7 +81,10 @@ func (c *client) GetSettingSuperEvents(ctx context.Context, site string) (*Setti
 // UpdateSettingSuperEvents Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingSuperEvents(ctx context.Context, site string, s *SettingSuperEvents) (*SettingSuperEvents, error) {
 	s.Key = SettingSuperEventsKey
-	result, err := c.SetSetting(ctx, site, SettingSuperEventsKey, s)
+	result, err := c.SetSetting(ctx, site, SettingSuperEventsKey, struct {
+		*SettingSuperEvents
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingSuperEvents: s})
 	if err != nil {
 		return nil, err
 	}

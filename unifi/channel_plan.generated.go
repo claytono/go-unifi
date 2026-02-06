@@ -36,6 +36,7 @@ type ChannelPlan struct {
 	Satisfaction            float64                              `json:"satisfaction,omitempty"`
 	SatisfactionTable       []ChannelPlanSatisfactionTable       `json:"satisfaction_table,omitempty"`
 	SiteBlacklistedChannels []ChannelPlanSiteBlacklistedChannels `json:"site_blacklisted_channels,omitempty"`
+	AdditionalFields        map[string]json.RawMessage           `json:"_additional_properties,omitempty"`
 }
 
 func (dst *ChannelPlan) UnmarshalJSON(b []byte) error {
@@ -54,10 +55,35 @@ func (dst *ChannelPlan) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *ChannelPlan) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                       {},
+		"site_id":                   {},
+		"attr_hidden":               {},
+		"attr_hidden_id":            {},
+		"attr_no_delete":            {},
+		"attr_no_edit":              {},
+		"ap_blacklisted_channels":   {},
+		"conf_source":               {},
+		"coupling":                  {},
+		"date":                      {},
+		"fitness":                   {},
+		"note":                      {},
+		"radio":                     {},
+		"radio_table":               {},
+		"satisfaction":              {},
+		"satisfaction_table":        {},
+		"site_blacklisted_channels": {},
+	}
+}
+
+func (dst *ChannelPlan) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 type ChannelPlanApBlacklistedChannels struct {
-	Channel   int    `json:"channel,omitempty" validate:"omitempty,oneof=36 38 40 42 44 46 48 52 56 60 64 100 104 108 112 116 120 124 128 132 136 140 144 149 153 157 161 165 183 184 185 187 188 189 192 196"` // 36|38|40|42|44|46|48|52|56|60|64|100|104|108|112|116|120|124|128|132|136|140|144|149|153|157|161|165|183|184|185|187|188|189|192|196
-	MAC       string `json:"mac,omitempty" validate:"omitempty,mac"`                                                                                                                                            // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
-	Timestamp int    `json:"timestamp,omitempty"`                                                                                                                                                               // [1-9][0-9]{12}
+	Channel          int                        `json:"channel,omitempty" validate:"omitempty,oneof=36 38 40 42 44 46 48 52 56 60 64 100 104 108 112 116 120 124 128 132 136 140 144 149 153 157 161 165 183 184 185 187 188 189 192 196"` // 36|38|40|42|44|46|48|52|56|60|64|100|104|108|112|116|120|124|128|132|136|140|144|149|153|157|161|165|183|184|185|187|188|189|192|196
+	MAC              string                     `json:"mac,omitempty" validate:"omitempty,mac"`                                                                                                                                            // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
+	Timestamp        int                        `json:"timestamp,omitempty"`                                                                                                                                                               // [1-9][0-9]{12}
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *ChannelPlanApBlacklistedChannels) UnmarshalJSON(b []byte) error {
@@ -81,10 +107,23 @@ func (dst *ChannelPlanApBlacklistedChannels) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *ChannelPlanApBlacklistedChannels) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"channel":   {},
+		"mac":       {},
+		"timestamp": {},
+	}
+}
+
+func (dst *ChannelPlanApBlacklistedChannels) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type ChannelPlanCoupling struct {
-	Rssi   int    `json:"rssi,omitempty"`
-	Source string `json:"source,omitempty"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2}).*$
-	Target string `json:"target,omitempty"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2}).*$
+	Rssi             int                        `json:"rssi,omitempty"`
+	Source           string                     `json:"source,omitempty"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2}).*$
+	Target           string                     `json:"target,omitempty"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2}).*$
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *ChannelPlanCoupling) UnmarshalJSON(b []byte) error {
@@ -106,14 +145,27 @@ func (dst *ChannelPlanCoupling) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *ChannelPlanCoupling) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"rssi":   {},
+		"source": {},
+		"target": {},
+	}
+}
+
+func (dst *ChannelPlanCoupling) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type ChannelPlanRadioTable struct {
-	BackupChannel string `json:"backup_channel,omitempty"`                                                       // [0-9]|[1][0-4]|16|34|36|38|40|42|44|46|48|52|56|60|64|100|104|108|112|116|120|124|128|132|136|140|144|149|153|157|161|165|183|184|185|187|188|189|192|196|auto
-	Channel       string `json:"channel,omitempty"`                                                              // [0-9]|[1][0-4]|16|34|36|38|40|42|44|46|48|52|56|60|64|100|104|108|112|116|120|124|128|132|136|140|144|149|153|157|161|165|183|184|185|187|188|189|192|196|auto
-	DeviceMAC     string `json:"device_mac,omitempty" validate:"omitempty,mac"`                                  // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
-	Name          string `json:"name,omitempty"`                                                                 // [a-z]*[0-9]*
-	TxPower       string `json:"tx_power,omitempty"`                                                             // [\d]+|auto
-	TxPowerMode   string `json:"tx_power_mode,omitempty" validate:"omitempty,oneof=auto medium high low custom"` // auto|medium|high|low|custom
-	Width         int    `json:"width,omitempty" validate:"omitempty,oneof=20 40 80 160"`                        // 20|40|80|160
+	BackupChannel    string                     `json:"backup_channel,omitempty"`                                                       // [0-9]|[1][0-4]|16|34|36|38|40|42|44|46|48|52|56|60|64|100|104|108|112|116|120|124|128|132|136|140|144|149|153|157|161|165|183|184|185|187|188|189|192|196|auto
+	Channel          string                     `json:"channel,omitempty"`                                                              // [0-9]|[1][0-4]|16|34|36|38|40|42|44|46|48|52|56|60|64|100|104|108|112|116|120|124|128|132|136|140|144|149|153|157|161|165|183|184|185|187|188|189|192|196|auto
+	DeviceMAC        string                     `json:"device_mac,omitempty" validate:"omitempty,mac"`                                  // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
+	Name             string                     `json:"name,omitempty"`                                                                 // [a-z]*[0-9]*
+	TxPower          string                     `json:"tx_power,omitempty"`                                                             // [\d]+|auto
+	TxPowerMode      string                     `json:"tx_power_mode,omitempty" validate:"omitempty,oneof=auto medium high low custom"` // auto|medium|high|low|custom
+	Width            int                        `json:"width,omitempty" validate:"omitempty,oneof=20 40 80 160"`                        // 20|40|80|160
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *ChannelPlanRadioTable) UnmarshalJSON(b []byte) error {
@@ -141,9 +193,26 @@ func (dst *ChannelPlanRadioTable) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *ChannelPlanRadioTable) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"backup_channel": {},
+		"channel":        {},
+		"device_mac":     {},
+		"name":           {},
+		"tx_power":       {},
+		"tx_power_mode":  {},
+		"width":          {},
+	}
+}
+
+func (dst *ChannelPlanRadioTable) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type ChannelPlanSatisfactionTable struct {
-	DeviceMAC    string  `json:"device_mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
-	Satisfaction float64 `json:"satisfaction,omitempty"`
+	DeviceMAC        string                     `json:"device_mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
+	Satisfaction     float64                    `json:"satisfaction,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *ChannelPlanSatisfactionTable) UnmarshalJSON(b []byte) error {
@@ -162,9 +231,21 @@ func (dst *ChannelPlanSatisfactionTable) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *ChannelPlanSatisfactionTable) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"device_mac":   {},
+		"satisfaction": {},
+	}
+}
+
+func (dst *ChannelPlanSatisfactionTable) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type ChannelPlanSiteBlacklistedChannels struct {
-	Channel   int `json:"channel,omitempty" validate:"omitempty,oneof=36 38 40 42 44 46 48 52 56 60 64 100 104 108 112 116 120 124 128 132 136 140 144 149 153 157 161 165 183 184 185 187 188 189 192 196"` // 36|38|40|42|44|46|48|52|56|60|64|100|104|108|112|116|120|124|128|132|136|140|144|149|153|157|161|165|183|184|185|187|188|189|192|196
-	Timestamp int `json:"timestamp,omitempty"`                                                                                                                                                               // [1-9][0-9]{12}
+	Channel          int                        `json:"channel,omitempty" validate:"omitempty,oneof=36 38 40 42 44 46 48 52 56 60 64 100 104 108 112 116 120 124 128 132 136 140 144 149 153 157 161 165 183 184 185 187 188 189 192 196"` // 36|38|40|42|44|46|48|52|56|60|64|100|104|108|112|116|120|124|128|132|136|140|144|149|153|157|161|165|183|184|185|187|188|189|192|196
+	Timestamp        int                        `json:"timestamp,omitempty"`                                                                                                                                                               // [1-9][0-9]{12}
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *ChannelPlanSiteBlacklistedChannels) UnmarshalJSON(b []byte) error {
@@ -188,6 +269,17 @@ func (dst *ChannelPlanSiteBlacklistedChannels) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *ChannelPlanSiteBlacklistedChannels) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"channel":   {},
+		"timestamp": {},
+	}
+}
+
+func (dst *ChannelPlanSiteBlacklistedChannels) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listChannelPlan(ctx context.Context, site string) ([]ChannelPlan, error) {
 	var respBody struct {
 		Meta Meta          `json:"meta"`
@@ -203,12 +295,22 @@ func (c *client) listChannelPlan(ctx context.Context, site string) ([]ChannelPla
 }
 
 func (c *client) getChannelPlan(ctx context.Context, site, id string) (*ChannelPlan, error) {
+	path := fmt.Sprintf("s/%s/rest/channelplan/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item ChannelPlan
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta          `json:"meta"`
 		Data []ChannelPlan `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/channelplan/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +337,10 @@ func (c *client) createChannelPlan(ctx context.Context, site string, d *ChannelP
 		Data []ChannelPlan `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/channelplan", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/channelplan", site), struct {
+		*ChannelPlan
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{ChannelPlan: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +360,10 @@ func (c *client) updateChannelPlan(ctx context.Context, site string, d *ChannelP
 		Data []ChannelPlan `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/channelplan/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/channelplan/%s", site, d.ID), struct {
+		*ChannelPlan
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{ChannelPlan: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

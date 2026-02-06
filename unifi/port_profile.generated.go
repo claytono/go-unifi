@@ -25,46 +25,47 @@ type PortProfile struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Autoneg                      bool                  `json:"autoneg"`
-	Dot1XCtrl                    string                `json:"dot1x_ctrl,omitempty" validate:"omitempty,oneof=auto force_authorized force_unauthorized mac_based multi_host"` // auto|force_authorized|force_unauthorized|mac_based|multi_host
-	Dot1XIDleTimeout             int                   `json:"dot1x_idle_timeout,omitempty"`                                                                                  // [0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]
-	EgressRateLimitKbps          int                   `json:"egress_rate_limit_kbps,omitempty"`                                                                              // 6[4-9]|[7-9][0-9]|[1-9][0-9]{2,6}
-	EgressRateLimitKbpsEnabled   bool                  `json:"egress_rate_limit_kbps_enabled"`
-	ExcludedNetworkIDs           []string              `json:"excluded_networkconf_ids,omitempty"`
-	FecMode                      string                `json:"fec_mode,omitempty" validate:"omitempty,oneof=rs-fec fc-fec default disabled"` // rs-fec|fc-fec|default|disabled
-	Forward                      string                `json:"forward,omitempty" validate:"omitempty,oneof=all native customize disabled"`   // all|native|customize|disabled
-	FullDuplex                   bool                  `json:"full_duplex"`
-	Isolation                    bool                  `json:"isolation"`
-	LldpmedEnabled               bool                  `json:"lldpmed_enabled"`
-	LldpmedNotifyEnabled         bool                  `json:"lldpmed_notify_enabled"`
-	MulticastRouterNetworkIDs    []string              `json:"multicast_router_networkconf_ids,omitempty"`
-	NATiveNetworkID              string                `json:"native_networkconf_id"`
-	Name                         string                `json:"name,omitempty"`
-	OpMode                       string                `json:"op_mode,omitempty"`                                      // switch
-	PoeMode                      string                `json:"poe_mode,omitempty" validate:"omitempty,oneof=auto off"` // auto|off
-	PortKeepaliveEnabled         bool                  `json:"port_keepalive_enabled"`
-	PortSecurityEnabled          bool                  `json:"port_security_enabled"`
-	PortSecurityMACAddress       []string              `json:"port_security_mac_address,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$
-	PriorityQueue1Level          int                   `json:"priority_queue1_level,omitempty"`                              // [0-9]|[1-9][0-9]|100
-	PriorityQueue2Level          int                   `json:"priority_queue2_level,omitempty"`                              // [0-9]|[1-9][0-9]|100
-	PriorityQueue3Level          int                   `json:"priority_queue3_level,omitempty"`                              // [0-9]|[1-9][0-9]|100
-	PriorityQueue4Level          int                   `json:"priority_queue4_level,omitempty"`                              // [0-9]|[1-9][0-9]|100
-	QOSProfile                   PortProfileQOSProfile `json:"qos_profile,omitempty"`
-	SettingPreference            string                `json:"setting_preference,omitempty" validate:"omitempty,oneof=auto manual"`                                   // auto|manual
-	Speed                        int                   `json:"speed,omitempty" validate:"omitempty,oneof=10 100 1000 2500 5000 10000 20000 25000 40000 50000 100000"` // 10|100|1000|2500|5000|10000|20000|25000|40000|50000|100000
-	StormctrlBroadcastastEnabled bool                  `json:"stormctrl_bcast_enabled"`
-	StormctrlBroadcastastLevel   int                   `json:"stormctrl_bcast_level,omitempty"` // [0-9]|[1-9][0-9]|100
-	StormctrlBroadcastastRate    int                   `json:"stormctrl_bcast_rate,omitempty"`  // [0-9]|[1-9][0-9]{1,6}|1[0-3][0-9]{6}|14[0-7][0-9]{5}|148[0-7][0-9]{4}|14880000
-	StormctrlMcastEnabled        bool                  `json:"stormctrl_mcast_enabled"`
-	StormctrlMcastLevel          int                   `json:"stormctrl_mcast_level,omitempty"`                                // [0-9]|[1-9][0-9]|100
-	StormctrlMcastRate           int                   `json:"stormctrl_mcast_rate,omitempty"`                                 // [0-9]|[1-9][0-9]{1,6}|1[0-3][0-9]{6}|14[0-7][0-9]{5}|148[0-7][0-9]{4}|14880000
-	StormctrlType                string                `json:"stormctrl_type,omitempty" validate:"omitempty,oneof=level rate"` // level|rate
-	StormctrlUcastEnabled        bool                  `json:"stormctrl_ucast_enabled"`
-	StormctrlUcastLevel          int                   `json:"stormctrl_ucast_level,omitempty"` // [0-9]|[1-9][0-9]|100
-	StormctrlUcastRate           int                   `json:"stormctrl_ucast_rate,omitempty"`  // [0-9]|[1-9][0-9]{1,6}|1[0-3][0-9]{6}|14[0-7][0-9]{5}|148[0-7][0-9]{4}|14880000
-	StpPortMode                  bool                  `json:"stp_port_mode"`
-	TaggedVLANMgmt               string                `json:"tagged_vlan_mgmt,omitempty" validate:"omitempty,oneof=auto block_all custom"` // auto|block_all|custom
-	VoiceNetworkID               string                `json:"voice_networkconf_id"`
+	Autoneg                      bool                       `json:"autoneg"`
+	Dot1XCtrl                    string                     `json:"dot1x_ctrl,omitempty" validate:"omitempty,oneof=auto force_authorized force_unauthorized mac_based multi_host"` // auto|force_authorized|force_unauthorized|mac_based|multi_host
+	Dot1XIDleTimeout             int                        `json:"dot1x_idle_timeout,omitempty"`                                                                                  // [0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]
+	EgressRateLimitKbps          int                        `json:"egress_rate_limit_kbps,omitempty"`                                                                              // 6[4-9]|[7-9][0-9]|[1-9][0-9]{2,6}
+	EgressRateLimitKbpsEnabled   bool                       `json:"egress_rate_limit_kbps_enabled"`
+	ExcludedNetworkIDs           []string                   `json:"excluded_networkconf_ids,omitempty"`
+	FecMode                      string                     `json:"fec_mode,omitempty" validate:"omitempty,oneof=rs-fec fc-fec default disabled"` // rs-fec|fc-fec|default|disabled
+	Forward                      string                     `json:"forward,omitempty" validate:"omitempty,oneof=all native customize disabled"`   // all|native|customize|disabled
+	FullDuplex                   bool                       `json:"full_duplex"`
+	Isolation                    bool                       `json:"isolation"`
+	LldpmedEnabled               bool                       `json:"lldpmed_enabled"`
+	LldpmedNotifyEnabled         bool                       `json:"lldpmed_notify_enabled"`
+	MulticastRouterNetworkIDs    []string                   `json:"multicast_router_networkconf_ids,omitempty"`
+	NATiveNetworkID              string                     `json:"native_networkconf_id"`
+	Name                         string                     `json:"name,omitempty"`
+	OpMode                       string                     `json:"op_mode,omitempty"`                                      // switch
+	PoeMode                      string                     `json:"poe_mode,omitempty" validate:"omitempty,oneof=auto off"` // auto|off
+	PortKeepaliveEnabled         bool                       `json:"port_keepalive_enabled"`
+	PortSecurityEnabled          bool                       `json:"port_security_enabled"`
+	PortSecurityMACAddress       []string                   `json:"port_security_mac_address,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$
+	PriorityQueue1Level          int                        `json:"priority_queue1_level,omitempty"`                              // [0-9]|[1-9][0-9]|100
+	PriorityQueue2Level          int                        `json:"priority_queue2_level,omitempty"`                              // [0-9]|[1-9][0-9]|100
+	PriorityQueue3Level          int                        `json:"priority_queue3_level,omitempty"`                              // [0-9]|[1-9][0-9]|100
+	PriorityQueue4Level          int                        `json:"priority_queue4_level,omitempty"`                              // [0-9]|[1-9][0-9]|100
+	QOSProfile                   PortProfileQOSProfile      `json:"qos_profile,omitempty"`
+	SettingPreference            string                     `json:"setting_preference,omitempty" validate:"omitempty,oneof=auto manual"`                                   // auto|manual
+	Speed                        int                        `json:"speed,omitempty" validate:"omitempty,oneof=10 100 1000 2500 5000 10000 20000 25000 40000 50000 100000"` // 10|100|1000|2500|5000|10000|20000|25000|40000|50000|100000
+	StormctrlBroadcastastEnabled bool                       `json:"stormctrl_bcast_enabled"`
+	StormctrlBroadcastastLevel   int                        `json:"stormctrl_bcast_level,omitempty"` // [0-9]|[1-9][0-9]|100
+	StormctrlBroadcastastRate    int                        `json:"stormctrl_bcast_rate,omitempty"`  // [0-9]|[1-9][0-9]{1,6}|1[0-3][0-9]{6}|14[0-7][0-9]{5}|148[0-7][0-9]{4}|14880000
+	StormctrlMcastEnabled        bool                       `json:"stormctrl_mcast_enabled"`
+	StormctrlMcastLevel          int                        `json:"stormctrl_mcast_level,omitempty"`                                // [0-9]|[1-9][0-9]|100
+	StormctrlMcastRate           int                        `json:"stormctrl_mcast_rate,omitempty"`                                 // [0-9]|[1-9][0-9]{1,6}|1[0-3][0-9]{6}|14[0-7][0-9]{5}|148[0-7][0-9]{4}|14880000
+	StormctrlType                string                     `json:"stormctrl_type,omitempty" validate:"omitempty,oneof=level rate"` // level|rate
+	StormctrlUcastEnabled        bool                       `json:"stormctrl_ucast_enabled"`
+	StormctrlUcastLevel          int                        `json:"stormctrl_ucast_level,omitempty"` // [0-9]|[1-9][0-9]|100
+	StormctrlUcastRate           int                        `json:"stormctrl_ucast_rate,omitempty"`  // [0-9]|[1-9][0-9]{1,6}|1[0-3][0-9]{6}|14[0-7][0-9]{5}|148[0-7][0-9]{4}|14880000
+	StpPortMode                  bool                       `json:"stp_port_mode"`
+	TaggedVLANMgmt               string                     `json:"tagged_vlan_mgmt,omitempty" validate:"omitempty,oneof=auto block_all custom"` // auto|block_all|custom
+	VoiceNetworkID               string                     `json:"voice_networkconf_id"`
+	AdditionalFields             map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *PortProfile) UnmarshalJSON(b []byte) error {
@@ -110,11 +111,65 @@ func (dst *PortProfile) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *PortProfile) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                              {},
+		"site_id":                          {},
+		"attr_hidden":                      {},
+		"attr_hidden_id":                   {},
+		"attr_no_delete":                   {},
+		"attr_no_edit":                     {},
+		"autoneg":                          {},
+		"dot1x_ctrl":                       {},
+		"dot1x_idle_timeout":               {},
+		"egress_rate_limit_kbps":           {},
+		"egress_rate_limit_kbps_enabled":   {},
+		"excluded_networkconf_ids":         {},
+		"fec_mode":                         {},
+		"forward":                          {},
+		"full_duplex":                      {},
+		"isolation":                        {},
+		"lldpmed_enabled":                  {},
+		"lldpmed_notify_enabled":           {},
+		"multicast_router_networkconf_ids": {},
+		"native_networkconf_id":            {},
+		"name":                             {},
+		"op_mode":                          {},
+		"poe_mode":                         {},
+		"port_keepalive_enabled":           {},
+		"port_security_enabled":            {},
+		"port_security_mac_address":        {},
+		"priority_queue1_level":            {},
+		"priority_queue2_level":            {},
+		"priority_queue3_level":            {},
+		"priority_queue4_level":            {},
+		"qos_profile":                      {},
+		"setting_preference":               {},
+		"speed":                            {},
+		"stormctrl_bcast_enabled":          {},
+		"stormctrl_bcast_level":            {},
+		"stormctrl_bcast_rate":             {},
+		"stormctrl_mcast_enabled":          {},
+		"stormctrl_mcast_level":            {},
+		"stormctrl_mcast_rate":             {},
+		"stormctrl_type":                   {},
+		"stormctrl_ucast_enabled":          {},
+		"stormctrl_ucast_level":            {},
+		"stormctrl_ucast_rate":             {},
+		"stp_port_mode":                    {},
+		"tagged_vlan_mgmt":                 {},
+		"voice_networkconf_id":             {},
+	}
+}
+
+func (dst *PortProfile) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 type PortProfileQOSMarking struct {
-	CosCode          int `json:"cos_code,omitempty"`                                                                                             // [0-7]
-	DscpCode         int `json:"dscp_code,omitempty" validate:"omitempty,oneof=0 8 16 24 32 40 48 56 10 12 14 18 20 22 26 28 30 34 36 38 44 46"` // 0|8|16|24|32|40|48|56|10|12|14|18|20|22|26|28|30|34|36|38|44|46
-	IPPrecedenceCode int `json:"ip_precedence_code,omitempty"`                                                                                   // [0-7]
-	Queue            int `json:"queue,omitempty"`                                                                                                // [0-7]
+	CosCode          int                        `json:"cos_code,omitempty"`                                                                                             // [0-7]
+	DscpCode         int                        `json:"dscp_code,omitempty" validate:"omitempty,oneof=0 8 16 24 32 40 48 56 10 12 14 18 20 22 26 28 30 34 36 38 44 46"` // 0|8|16|24|32|40|48|56|10|12|14|18|20|22|26|28|30|34|36|38|44|46
+	IPPrecedenceCode int                        `json:"ip_precedence_code,omitempty"`                                                                                   // [0-7]
+	Queue            int                        `json:"queue,omitempty"`                                                                                                // [0-7]
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *PortProfileQOSMarking) UnmarshalJSON(b []byte) error {
@@ -142,13 +197,27 @@ func (dst *PortProfileQOSMarking) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *PortProfileQOSMarking) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"cos_code":           {},
+		"dscp_code":          {},
+		"ip_precedence_code": {},
+		"queue":              {},
+	}
+}
+
+func (dst *PortProfileQOSMarking) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type PortProfileQOSMatching struct {
-	CosCode          int    `json:"cos_code,omitempty"`           // [0-7]
-	DscpCode         int    `json:"dscp_code,omitempty"`          // [0-9]|[1-5][0-9]|6[0-3]
-	DstPort          int    `json:"dst_port,omitempty"`           // [0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]|[1-5][0-9][0-9][0-9][0-9]|6[0-4][0-9][0-9][0-9]|65[0-4][0-9][0-9]|655[0-2][0-9]|6553[0-4]|65535
-	IPPrecedenceCode int    `json:"ip_precedence_code,omitempty"` // [0-7]
-	Protocol         string `json:"protocol,omitempty"`           // ([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])|ah|ax.25|dccp|ddp|egp|eigrp|encap|esp|etherip|fc|ggp|gre|hip|hmp|icmp|idpr-cmtp|idrp|igmp|igp|ip|ipcomp|ipencap|ipip|ipv6|ipv6-frag|ipv6-icmp|ipv6-nonxt|ipv6-opts|ipv6-route|isis|iso-tp4|l2tp|manet|mobility-header|mpls-in-ip|ospf|pim|pup|rdp|rohc|rspf|rsvp|sctp|shim6|skip|st|tcp|udp|udplite|vmtp|vrrp|wesp|xns-idp|xtp
-	SrcPort          int    `json:"src_port,omitempty"`           // [0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]|[1-5][0-9][0-9][0-9][0-9]|6[0-4][0-9][0-9][0-9]|65[0-4][0-9][0-9]|655[0-2][0-9]|6553[0-4]|65535
+	CosCode          int                        `json:"cos_code,omitempty"`           // [0-7]
+	DscpCode         int                        `json:"dscp_code,omitempty"`          // [0-9]|[1-5][0-9]|6[0-3]
+	DstPort          int                        `json:"dst_port,omitempty"`           // [0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]|[1-5][0-9][0-9][0-9][0-9]|6[0-4][0-9][0-9][0-9]|65[0-4][0-9][0-9]|655[0-2][0-9]|6553[0-4]|65535
+	IPPrecedenceCode int                        `json:"ip_precedence_code,omitempty"` // [0-7]
+	Protocol         string                     `json:"protocol,omitempty"`           // ([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])|ah|ax.25|dccp|ddp|egp|eigrp|encap|esp|etherip|fc|ggp|gre|hip|hmp|icmp|idpr-cmtp|idrp|igmp|igp|ip|ipcomp|ipencap|ipip|ipv6|ipv6-frag|ipv6-icmp|ipv6-nonxt|ipv6-opts|ipv6-route|isis|iso-tp4|l2tp|manet|mobility-header|mpls-in-ip|ospf|pim|pup|rdp|rohc|rspf|rsvp|sctp|shim6|skip|st|tcp|udp|udplite|vmtp|vrrp|wesp|xns-idp|xtp
+	SrcPort          int                        `json:"src_port,omitempty"`           // [0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]|[1-5][0-9][0-9][0-9][0-9]|6[0-4][0-9][0-9][0-9]|65[0-4][0-9][0-9]|655[0-2][0-9]|6553[0-4]|65535
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *PortProfileQOSMatching) UnmarshalJSON(b []byte) error {
@@ -178,9 +247,25 @@ func (dst *PortProfileQOSMatching) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *PortProfileQOSMatching) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"cos_code":           {},
+		"dscp_code":          {},
+		"dst_port":           {},
+		"ip_precedence_code": {},
+		"protocol":           {},
+		"src_port":           {},
+	}
+}
+
+func (dst *PortProfileQOSMatching) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type PortProfileQOSPolicies struct {
-	QOSMarking  PortProfileQOSMarking  `json:"qos_marking,omitempty"`
-	QOSMatching PortProfileQOSMatching `json:"qos_matching,omitempty"`
+	QOSMarking       PortProfileQOSMarking      `json:"qos_marking,omitempty"`
+	QOSMatching      PortProfileQOSMatching     `json:"qos_matching,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *PortProfileQOSPolicies) UnmarshalJSON(b []byte) error {
@@ -199,9 +284,21 @@ func (dst *PortProfileQOSPolicies) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *PortProfileQOSPolicies) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"qos_marking":  {},
+		"qos_matching": {},
+	}
+}
+
+func (dst *PortProfileQOSPolicies) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type PortProfileQOSProfile struct {
-	QOSPolicies    []PortProfileQOSPolicies `json:"qos_policies,omitempty"`
-	QOSProfileMode string                   `json:"qos_profile_mode,omitempty" validate:"omitempty,oneof=custom unifi_play aes67_audio crestron_audio_video dante_audio ndi_aes67_audio ndi_dante_audio qsys_audio_video qsys_video_dante_audio sdvoe_aes67_audio sdvoe_dante_audio shure_audio"` // custom|unifi_play|aes67_audio|crestron_audio_video|dante_audio|ndi_aes67_audio|ndi_dante_audio|qsys_audio_video|qsys_video_dante_audio|sdvoe_aes67_audio|sdvoe_dante_audio|shure_audio
+	QOSPolicies      []PortProfileQOSPolicies   `json:"qos_policies,omitempty"`
+	QOSProfileMode   string                     `json:"qos_profile_mode,omitempty" validate:"omitempty,oneof=custom unifi_play aes67_audio crestron_audio_video dante_audio ndi_aes67_audio ndi_dante_audio qsys_audio_video qsys_video_dante_audio sdvoe_aes67_audio sdvoe_dante_audio shure_audio"` // custom|unifi_play|aes67_audio|crestron_audio_video|dante_audio|ndi_aes67_audio|ndi_dante_audio|qsys_audio_video|qsys_video_dante_audio|sdvoe_aes67_audio|sdvoe_dante_audio|shure_audio
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *PortProfileQOSProfile) UnmarshalJSON(b []byte) error {
@@ -220,6 +317,17 @@ func (dst *PortProfileQOSProfile) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *PortProfileQOSProfile) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"qos_policies":     {},
+		"qos_profile_mode": {},
+	}
+}
+
+func (dst *PortProfileQOSProfile) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listPortProfile(ctx context.Context, site string) ([]PortProfile, error) {
 	var respBody struct {
 		Meta Meta          `json:"meta"`
@@ -235,12 +343,22 @@ func (c *client) listPortProfile(ctx context.Context, site string) ([]PortProfil
 }
 
 func (c *client) getPortProfile(ctx context.Context, site, id string) (*PortProfile, error) {
+	path := fmt.Sprintf("s/%s/rest/portconf/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item PortProfile
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta          `json:"meta"`
 		Data []PortProfile `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/portconf/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +385,10 @@ func (c *client) createPortProfile(ctx context.Context, site string, d *PortProf
 		Data []PortProfile `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/portconf", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/portconf", site), struct {
+		*PortProfile
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{PortProfile: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +408,10 @@ func (c *client) updatePortProfile(ctx context.Context, site string, d *PortProf
 		Data []PortProfile `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/portconf/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/portconf/%s", site, d.ID), struct {
+		*PortProfile
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{PortProfile: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
