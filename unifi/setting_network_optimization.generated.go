@@ -29,7 +29,8 @@ type SettingNetworkOptimization struct {
 
 	Key string `json:"key"`
 
-	Enabled bool `json:"enabled"`
+	Enabled          bool                       `json:"enabled"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingNetworkOptimization) UnmarshalJSON(b []byte) error {
@@ -48,6 +49,23 @@ func (dst *SettingNetworkOptimization) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingNetworkOptimization) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"enabled":        {},
+	}
+}
+
+func (dst *SettingNetworkOptimization) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingNetworkOptimization Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingNetworkOptimization(ctx context.Context, site string) (*SettingNetworkOptimization, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingNetworkOptimizationKey)
@@ -63,7 +81,10 @@ func (c *client) GetSettingNetworkOptimization(ctx context.Context, site string)
 // UpdateSettingNetworkOptimization Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingNetworkOptimization(ctx context.Context, site string, s *SettingNetworkOptimization) (*SettingNetworkOptimization, error) {
 	s.Key = SettingNetworkOptimizationKey
-	result, err := c.SetSetting(ctx, site, SettingNetworkOptimizationKey, s)
+	result, err := c.SetSetting(ctx, site, SettingNetworkOptimizationKey, struct {
+		*SettingNetworkOptimization
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingNetworkOptimization: s})
 	if err != nil {
 		return nil, err
 	}

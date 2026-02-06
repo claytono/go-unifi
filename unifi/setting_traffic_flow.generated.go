@@ -29,10 +29,11 @@ type SettingTrafficFlow struct {
 
 	Key string `json:"key"`
 
-	EnabledAllowedTraffic        bool `json:"enabled_allowed_traffic"`
-	GatewayDNSEnabled            bool `json:"gateway_dns_enabled"`
-	UnifiDeviceManagementEnabled bool `json:"unifi_device_management_enabled"`
-	UnifiServicesEnabled         bool `json:"unifi_services_enabled"`
+	EnabledAllowedTraffic        bool                       `json:"enabled_allowed_traffic"`
+	GatewayDNSEnabled            bool                       `json:"gateway_dns_enabled"`
+	UnifiDeviceManagementEnabled bool                       `json:"unifi_device_management_enabled"`
+	UnifiServicesEnabled         bool                       `json:"unifi_services_enabled"`
+	AdditionalFields             map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingTrafficFlow) UnmarshalJSON(b []byte) error {
@@ -51,6 +52,26 @@ func (dst *SettingTrafficFlow) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingTrafficFlow) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                             {},
+		"site_id":                         {},
+		"attr_hidden":                     {},
+		"attr_hidden_id":                  {},
+		"attr_no_delete":                  {},
+		"attr_no_edit":                    {},
+		"key":                             {},
+		"enabled_allowed_traffic":         {},
+		"gateway_dns_enabled":             {},
+		"unifi_device_management_enabled": {},
+		"unifi_services_enabled":          {},
+	}
+}
+
+func (dst *SettingTrafficFlow) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingTrafficFlow Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingTrafficFlow(ctx context.Context, site string) (*SettingTrafficFlow, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingTrafficFlowKey)
@@ -66,7 +87,10 @@ func (c *client) GetSettingTrafficFlow(ctx context.Context, site string) (*Setti
 // UpdateSettingTrafficFlow Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingTrafficFlow(ctx context.Context, site string, s *SettingTrafficFlow) (*SettingTrafficFlow, error) {
 	s.Key = SettingTrafficFlowKey
-	result, err := c.SetSetting(ctx, site, SettingTrafficFlowKey, s)
+	result, err := c.SetSetting(ctx, site, SettingTrafficFlowKey, struct {
+		*SettingTrafficFlow
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingTrafficFlow: s})
 	if err != nil {
 		return nil, err
 	}

@@ -29,8 +29,9 @@ type SettingTeleport struct {
 
 	Key string `json:"key"`
 
-	Enabled    bool   `json:"enabled"`
-	SubnetCidr string `json:"subnet_cidr"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\/([8-9]|[1-2][0-9]|3[0-2])$|^$
+	Enabled          bool                       `json:"enabled"`
+	SubnetCidr       string                     `json:"subnet_cidr"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\/([8-9]|[1-2][0-9]|3[0-2])$|^$
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingTeleport) UnmarshalJSON(b []byte) error {
@@ -49,6 +50,24 @@ func (dst *SettingTeleport) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingTeleport) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"enabled":        {},
+		"subnet_cidr":    {},
+	}
+}
+
+func (dst *SettingTeleport) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingTeleport Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingTeleport(ctx context.Context, site string) (*SettingTeleport, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingTeleportKey)
@@ -64,7 +83,10 @@ func (c *client) GetSettingTeleport(ctx context.Context, site string) (*SettingT
 // UpdateSettingTeleport Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingTeleport(ctx context.Context, site string, s *SettingTeleport) (*SettingTeleport, error) {
 	s.Key = SettingTeleportKey
-	result, err := c.SetSetting(ctx, site, SettingTeleportKey, s)
+	result, err := c.SetSetting(ctx, site, SettingTeleportKey, struct {
+		*SettingTeleport
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingTeleport: s})
 	if err != nil {
 		return nil, err
 	}

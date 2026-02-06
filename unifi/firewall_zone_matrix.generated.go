@@ -25,9 +25,10 @@ type FirewallZoneMatrix struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Data    []FirewallZoneMatrixData `json:"data,omitempty"`
-	Name    string                   `json:"name,omitempty"`
-	ZoneKey string                   `json:"zone_key,omitempty"`
+	Data             []FirewallZoneMatrixData   `json:"data,omitempty"`
+	Name             string                     `json:"name,omitempty"`
+	ZoneKey          string                     `json:"zone_key,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *FirewallZoneMatrix) UnmarshalJSON(b []byte) error {
@@ -46,9 +47,28 @@ func (dst *FirewallZoneMatrix) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *FirewallZoneMatrix) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"data":           {},
+		"name":           {},
+		"zone_key":       {},
+	}
+}
+
+func (dst *FirewallZoneMatrix) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type FirewallZoneMatrixData struct {
-	Action      string `json:"action,omitempty"`
-	PolicyCount int    `json:"policy_count,omitempty"`
+	Action           string                     `json:"action,omitempty"`
+	PolicyCount      int                        `json:"policy_count,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *FirewallZoneMatrixData) UnmarshalJSON(b []byte) error {
@@ -70,6 +90,17 @@ func (dst *FirewallZoneMatrixData) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *FirewallZoneMatrixData) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"action":       {},
+		"policy_count": {},
+	}
+}
+
+func (dst *FirewallZoneMatrixData) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listFirewallZoneMatrix(ctx context.Context, site string) ([]FirewallZoneMatrix, error) {
 	var respBody []FirewallZoneMatrix
 
@@ -82,9 +113,22 @@ func (c *client) listFirewallZoneMatrix(ctx context.Context, site string) ([]Fir
 }
 
 func (c *client) getFirewallZoneMatrix(ctx context.Context, site, id string) (*FirewallZoneMatrix, error) {
+	path := fmt.Sprintf("%s/site/%s/firewall/zone-matrix/%s", c.apiPaths.ApiV2Path, site, id)
+
+	if c.includeAdditionalFields {
+		var item FirewallZoneMatrix
+		if err := c.getWithAdditionalFieldsV2(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		if item.ID == "" {
+			return nil, ErrNotFound
+		}
+		return &item, nil
+	}
+
 	var respBody FirewallZoneMatrix
 
-	err := c.Get(ctx, fmt.Sprintf("%s/site/%s/firewall/zone-matrix/%s", c.apiPaths.ApiV2Path, site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 
 	if err != nil {
 		return nil, err
@@ -106,7 +150,10 @@ func (c *client) deleteFirewallZoneMatrix(ctx context.Context, site, id string) 
 func (c *client) createFirewallZoneMatrix(ctx context.Context, site string, d *FirewallZoneMatrix) (*FirewallZoneMatrix, error) {
 	var respBody FirewallZoneMatrix
 
-	err := c.Post(ctx, fmt.Sprintf("%s/site/%s/firewall/zone-matrix", c.apiPaths.ApiV2Path, site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("%s/site/%s/firewall/zone-matrix", c.apiPaths.ApiV2Path, site), struct {
+		*FirewallZoneMatrix
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{FirewallZoneMatrix: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +164,10 @@ func (c *client) createFirewallZoneMatrix(ctx context.Context, site string, d *F
 func (c *client) updateFirewallZoneMatrix(ctx context.Context, site string, d *FirewallZoneMatrix) (*FirewallZoneMatrix, error) {
 	var respBody FirewallZoneMatrix
 
-	err := c.Put(ctx, fmt.Sprintf("%s/site/%s/firewall/zone-matrix/%s", c.apiPaths.ApiV2Path, site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("%s/site/%s/firewall/zone-matrix/%s", c.apiPaths.ApiV2Path, site, d.ID), struct {
+		*FirewallZoneMatrix
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{FirewallZoneMatrix: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

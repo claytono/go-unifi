@@ -29,8 +29,9 @@ type SettingAutoSpeedtest struct {
 
 	Key string `json:"key"`
 
-	CronExpr string `json:"cron_expr,omitempty"`
-	Enabled  bool   `json:"enabled"`
+	CronExpr         string                     `json:"cron_expr,omitempty"`
+	Enabled          bool                       `json:"enabled"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingAutoSpeedtest) UnmarshalJSON(b []byte) error {
@@ -49,6 +50,24 @@ func (dst *SettingAutoSpeedtest) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingAutoSpeedtest) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"cron_expr":      {},
+		"enabled":        {},
+	}
+}
+
+func (dst *SettingAutoSpeedtest) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingAutoSpeedtest Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingAutoSpeedtest(ctx context.Context, site string) (*SettingAutoSpeedtest, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingAutoSpeedtestKey)
@@ -64,7 +83,10 @@ func (c *client) GetSettingAutoSpeedtest(ctx context.Context, site string) (*Set
 // UpdateSettingAutoSpeedtest Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingAutoSpeedtest(ctx context.Context, site string, s *SettingAutoSpeedtest) (*SettingAutoSpeedtest, error) {
 	s.Key = SettingAutoSpeedtestKey
-	result, err := c.SetSetting(ctx, site, SettingAutoSpeedtestKey, s)
+	result, err := c.SetSetting(ctx, site, SettingAutoSpeedtestKey, struct {
+		*SettingAutoSpeedtest
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingAutoSpeedtest: s})
 	if err != nil {
 		return nil, err
 	}

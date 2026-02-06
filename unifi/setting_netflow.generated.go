@@ -29,17 +29,18 @@ type SettingNetflow struct {
 
 	Key string `json:"key"`
 
-	AutoEngineIDEnabled bool     `json:"auto_engine_id_enabled"`
-	Enabled             bool     `json:"enabled"`
-	EngineID            int      `json:"engine_id,omitempty"` // ^$|[1-9][0-9]*
-	ExportFrequency     int      `json:"export_frequency,omitempty"`
-	NetworkIDs          []string `json:"network_ids,omitempty"`
-	Port                int      `json:"port,omitempty"` // 102[4-9]|10[3-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5]
-	RefreshRate         int      `json:"refresh_rate,omitempty"`
-	SamplingMode        string   `json:"sampling_mode,omitempty" validate:"omitempty,oneof=off hash random deterministic"` // off|hash|random|deterministic
-	SamplingRate        int      `json:"sampling_rate,omitempty"`                                                          // [2-9]|[1-9][0-9]{1,3}|1[0-5][0-9]{3}|16[0-2][0-9]{2}|163[0-7][0-9]|1638[0-3]|^$
-	Server              string   `json:"server,omitempty"`                                                                 // .{0,252}[^\.]$
-	Version             int      `json:"version,omitempty" validate:"omitempty,oneof=5 9 10"`                              // 5|9|10
+	AutoEngineIDEnabled bool                       `json:"auto_engine_id_enabled"`
+	Enabled             bool                       `json:"enabled"`
+	EngineID            int                        `json:"engine_id,omitempty"` // ^$|[1-9][0-9]*
+	ExportFrequency     int                        `json:"export_frequency,omitempty"`
+	NetworkIDs          []string                   `json:"network_ids,omitempty"`
+	Port                int                        `json:"port,omitempty"` // 102[4-9]|10[3-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5]
+	RefreshRate         int                        `json:"refresh_rate,omitempty"`
+	SamplingMode        string                     `json:"sampling_mode,omitempty" validate:"omitempty,oneof=off hash random deterministic"` // off|hash|random|deterministic
+	SamplingRate        int                        `json:"sampling_rate,omitempty"`                                                          // [2-9]|[1-9][0-9]{1,3}|1[0-5][0-9]{3}|16[0-2][0-9]{2}|163[0-7][0-9]|1638[0-3]|^$
+	Server              string                     `json:"server,omitempty"`                                                                 // .{0,252}[^\.]$
+	Version             int                        `json:"version,omitempty" validate:"omitempty,oneof=5 9 10"`                              // 5|9|10
+	AdditionalFields    map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingNetflow) UnmarshalJSON(b []byte) error {
@@ -71,6 +72,33 @@ func (dst *SettingNetflow) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingNetflow) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                    {},
+		"site_id":                {},
+		"attr_hidden":            {},
+		"attr_hidden_id":         {},
+		"attr_no_delete":         {},
+		"attr_no_edit":           {},
+		"key":                    {},
+		"auto_engine_id_enabled": {},
+		"enabled":                {},
+		"engine_id":              {},
+		"export_frequency":       {},
+		"network_ids":            {},
+		"port":                   {},
+		"refresh_rate":           {},
+		"sampling_mode":          {},
+		"sampling_rate":          {},
+		"server":                 {},
+		"version":                {},
+	}
+}
+
+func (dst *SettingNetflow) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingNetflow Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingNetflow(ctx context.Context, site string) (*SettingNetflow, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingNetflowKey)
@@ -86,7 +114,10 @@ func (c *client) GetSettingNetflow(ctx context.Context, site string) (*SettingNe
 // UpdateSettingNetflow Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingNetflow(ctx context.Context, site string, s *SettingNetflow) (*SettingNetflow, error) {
 	s.Key = SettingNetflowKey
-	result, err := c.SetSetting(ctx, site, SettingNetflowKey, s)
+	result, err := c.SetSetting(ctx, site, SettingNetflowKey, struct {
+		*SettingNetflow
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingNetflow: s})
 	if err != nil {
 		return nil, err
 	}

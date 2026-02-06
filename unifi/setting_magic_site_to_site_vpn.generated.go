@@ -29,7 +29,8 @@ type SettingMagicSiteToSiteVpn struct {
 
 	Key string `json:"key"`
 
-	Enabled bool `json:"enabled"`
+	Enabled          bool                       `json:"enabled"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingMagicSiteToSiteVpn) UnmarshalJSON(b []byte) error {
@@ -48,6 +49,23 @@ func (dst *SettingMagicSiteToSiteVpn) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingMagicSiteToSiteVpn) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"enabled":        {},
+	}
+}
+
+func (dst *SettingMagicSiteToSiteVpn) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingMagicSiteToSiteVpn Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingMagicSiteToSiteVpn(ctx context.Context, site string) (*SettingMagicSiteToSiteVpn, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingMagicSiteToSiteVpnKey)
@@ -63,7 +81,10 @@ func (c *client) GetSettingMagicSiteToSiteVpn(ctx context.Context, site string) 
 // UpdateSettingMagicSiteToSiteVpn Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingMagicSiteToSiteVpn(ctx context.Context, site string, s *SettingMagicSiteToSiteVpn) (*SettingMagicSiteToSiteVpn, error) {
 	s.Key = SettingMagicSiteToSiteVpnKey
-	result, err := c.SetSetting(ctx, site, SettingMagicSiteToSiteVpnKey, s)
+	result, err := c.SetSetting(ctx, site, SettingMagicSiteToSiteVpnKey, struct {
+		*SettingMagicSiteToSiteVpn
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingMagicSiteToSiteVpn: s})
 	if err != nil {
 		return nil, err
 	}

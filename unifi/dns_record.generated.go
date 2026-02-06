@@ -25,14 +25,15 @@ type DNSRecord struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Enabled    bool   `json:"enabled"`
-	Key        string `json:"key,omitempty" validate:"omitempty,gte=1,lte=256"`                                    // .{1,256}
-	Port       int    `json:"port,omitempty"`                                                                      // ^[0-9][0-9]?$|^
-	Priority   int    `json:"priority,omitempty"`                                                                  // ^[0-9][0-9]?$|^
-	RecordType string `json:"record_type,omitempty" validate:"omitempty,oneof=A AAAA CNAME MX NS PTR SOA SRV TXT"` // A|AAAA|CNAME|MX|NS|PTR|SOA|SRV|TXT
-	Ttl        int    `json:"ttl,omitempty"`                                                                       // ^[0-9][0-9]?$|^
-	Value      string `json:"value,omitempty" validate:"omitempty,gte=1,lte=256"`                                  // .{1,256}
-	Weight     int    `json:"weight,omitempty"`                                                                    // ^[0-9][0-9]?$|^
+	Enabled          bool                       `json:"enabled"`
+	Key              string                     `json:"key,omitempty" validate:"omitempty,gte=1,lte=256"`                                    // .{1,256}
+	Port             int                        `json:"port,omitempty"`                                                                      // ^[0-9][0-9]?$|^
+	Priority         int                        `json:"priority,omitempty"`                                                                  // ^[0-9][0-9]?$|^
+	RecordType       string                     `json:"record_type,omitempty" validate:"omitempty,oneof=A AAAA CNAME MX NS PTR SOA SRV TXT"` // A|AAAA|CNAME|MX|NS|PTR|SOA|SRV|TXT
+	Ttl              int                        `json:"ttl,omitempty"`                                                                       // ^[0-9][0-9]?$|^
+	Value            string                     `json:"value,omitempty" validate:"omitempty,gte=1,lte=256"`                                  // .{1,256}
+	Weight           int                        `json:"weight,omitempty"`                                                                    // ^[0-9][0-9]?$|^
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *DNSRecord) UnmarshalJSON(b []byte) error {
@@ -60,6 +61,27 @@ func (dst *DNSRecord) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *DNSRecord) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"enabled":        {},
+		"key":            {},
+		"port":           {},
+		"priority":       {},
+		"record_type":    {},
+		"ttl":            {},
+		"value":          {},
+		"weight":         {},
+	}
+}
+
+func (dst *DNSRecord) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 func (c *client) listDNSRecord(ctx context.Context, site string) ([]DNSRecord, error) {
 	var respBody []DNSRecord
 
@@ -72,9 +94,22 @@ func (c *client) listDNSRecord(ctx context.Context, site string) ([]DNSRecord, e
 }
 
 func (c *client) getDNSRecord(ctx context.Context, site, id string) (*DNSRecord, error) {
+	path := fmt.Sprintf("%s/site/%s/static-dns/%s", c.apiPaths.ApiV2Path, site, id)
+
+	if c.includeAdditionalFields {
+		var item DNSRecord
+		if err := c.getWithAdditionalFieldsV2(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		if item.ID == "" {
+			return nil, ErrNotFound
+		}
+		return &item, nil
+	}
+
 	var respBody DNSRecord
 
-	err := c.Get(ctx, fmt.Sprintf("%s/site/%s/static-dns/%s", c.apiPaths.ApiV2Path, site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 
 	if err != nil {
 		return nil, err
@@ -96,7 +131,10 @@ func (c *client) deleteDNSRecord(ctx context.Context, site, id string) error {
 func (c *client) createDNSRecord(ctx context.Context, site string, d *DNSRecord) (*DNSRecord, error) {
 	var respBody DNSRecord
 
-	err := c.Post(ctx, fmt.Sprintf("%s/site/%s/static-dns", c.apiPaths.ApiV2Path, site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("%s/site/%s/static-dns", c.apiPaths.ApiV2Path, site), struct {
+		*DNSRecord
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{DNSRecord: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +145,10 @@ func (c *client) createDNSRecord(ctx context.Context, site string, d *DNSRecord)
 func (c *client) updateDNSRecord(ctx context.Context, site string, d *DNSRecord) (*DNSRecord, error) {
 	var respBody DNSRecord
 
-	err := c.Put(ctx, fmt.Sprintf("%s/site/%s/static-dns/%s", c.apiPaths.ApiV2Path, site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("%s/site/%s/static-dns/%s", c.apiPaths.ApiV2Path, site, d.ID), struct {
+		*DNSRecord
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{DNSRecord: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

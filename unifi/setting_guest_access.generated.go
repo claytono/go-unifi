@@ -29,103 +29,104 @@ type SettingGuestAccess struct {
 
 	Key string `json:"key"`
 
-	AllowedSubnet                          string   `json:"allowed_subnet,omitempty"`
-	Auth                                   string   `json:"auth,omitempty" validate:"omitempty,oneof=none hotspot facebook_wifi custom"` // none|hotspot|facebook_wifi|custom
-	AuthUrl                                string   `json:"auth_url,omitempty"`
-	AuthorizeUseSandbox                    bool     `json:"authorize_use_sandbox"`
-	CustomIP                               string   `json:"custom_ip" validate:"omitempty,ipv4"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^$
-	EcEnabled                              bool     `json:"ec_enabled"`
-	Expire                                 int      `json:"expire,omitempty"`                                           // [\d]+|custom
-	ExpireNumber                           int      `json:"expire_number,omitempty"`                                    // ^[1-9][0-9]{0,5}|1000000$
-	ExpireUnit                             int      `json:"expire_unit,omitempty" validate:"omitempty,oneof=1 60 1440"` // 1|60|1440
-	FacebookAppID                          string   `json:"facebook_app_id"`
-	FacebookEnabled                        bool     `json:"facebook_enabled"`
-	FacebookScopeEmail                     bool     `json:"facebook_scope_email"`
-	FacebookWifiBlockHttps                 bool     `json:"facebook_wifi_block_https"`
-	FacebookWifiGwID                       string   `json:"facebook_wifi_gw_id"`
-	FacebookWifiGwName                     string   `json:"facebook_wifi_gw_name,omitempty"`
-	Gateway                                string   `json:"gateway,omitempty" validate:"omitempty,oneof=paypal stripe authorize quickpay merchantwarrior ippay"` // paypal|stripe|authorize|quickpay|merchantwarrior|ippay
-	GoogleClientID                         string   `json:"google_client_id"`
-	GoogleDomain                           string   `json:"google_domain"`
-	GoogleEnabled                          bool     `json:"google_enabled"`
-	GoogleScopeEmail                       bool     `json:"google_scope_email"`
-	IPpayUseSandbox                        bool     `json:"ippay_use_sandbox"`
-	MerchantwarriorUseSandbox              bool     `json:"merchantwarrior_use_sandbox"`
-	PasswordEnabled                        bool     `json:"password_enabled"`
-	PaymentEnabled                         bool     `json:"payment_enabled"`
-	PaypalUseSandbox                       bool     `json:"paypal_use_sandbox"`
-	PortalCustomized                       bool     `json:"portal_customized"`
-	PortalCustomizedAuthenticationText     string   `json:"portal_customized_authentication_text,omitempty"`
-	PortalCustomizedBgColor                string   `json:"portal_customized_bg_color"` // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
-	PortalCustomizedBgImageEnabled         bool     `json:"portal_customized_bg_image_enabled"`
-	PortalCustomizedBgImageFilename        string   `json:"portal_customized_bg_image_filename"`
-	PortalCustomizedBgImageTile            bool     `json:"portal_customized_bg_image_tile"`
-	PortalCustomizedBgType                 string   `json:"portal_customized_bg_type,omitempty" validate:"omitempty,oneof=color image gallery"` // color|image|gallery
-	PortalCustomizedBoxColor               string   `json:"portal_customized_box_color"`                                                        // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
-	PortalCustomizedBoxLinkColor           string   `json:"portal_customized_box_link_color"`                                                   // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
-	PortalCustomizedBoxOpacity             int      `json:"portal_customized_box_opacity,omitempty"`                                            // ^[1-9][0-9]?$|^100$|^$
-	PortalCustomizedBoxRADIUS              int      `json:"portal_customized_box_radius,omitempty"`                                             // [0-9]|[1-4][0-9]|50
-	PortalCustomizedBoxTextColor           string   `json:"portal_customized_box_text_color"`                                                   // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
-	PortalCustomizedButtonColor            string   `json:"portal_customized_button_color"`                                                     // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
-	PortalCustomizedButtonText             string   `json:"portal_customized_button_text,omitempty"`
-	PortalCustomizedButtonTextColor        string   `json:"portal_customized_button_text_color"`   // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
-	PortalCustomizedLanguages              []string `json:"portal_customized_languages,omitempty"` // ^[a-z]{2}([_-][a-zA-Z]{2,4})*$
-	PortalCustomizedLinkColor              string   `json:"portal_customized_link_color"`          // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
-	PortalCustomizedLogoEnabled            bool     `json:"portal_customized_logo_enabled"`
-	PortalCustomizedLogoFilename           string   `json:"portal_customized_logo_filename"`
-	PortalCustomizedLogoPosition           string   `json:"portal_customized_logo_position,omitempty" validate:"omitempty,oneof=left center right"` // left|center|right
-	PortalCustomizedLogoSize               int      `json:"portal_customized_logo_size,omitempty"`                                                  // 6[4-9]|[7-9][0-9]|1[0-8][0-9]|19[0-2]
-	PortalCustomizedSuccessText            string   `json:"portal_customized_success_text,omitempty"`
-	PortalCustomizedTextColor              string   `json:"portal_customized_text_color"` // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
-	PortalCustomizedTitle                  string   `json:"portal_customized_title,omitempty"`
-	PortalCustomizedTos                    string   `json:"portal_customized_tos,omitempty"`
-	PortalCustomizedTosEnabled             bool     `json:"portal_customized_tos_enabled"`
-	PortalCustomizedUnsplashAuthorName     string   `json:"portal_customized_unsplash_author_name,omitempty"`
-	PortalCustomizedUnsplashAuthorUsername string   `json:"portal_customized_unsplash_author_username,omitempty"`
-	PortalCustomizedWelcomeText            string   `json:"portal_customized_welcome_text,omitempty"`
-	PortalCustomizedWelcomeTextEnabled     bool     `json:"portal_customized_welcome_text_enabled"`
-	PortalCustomizedWelcomeTextPosition    string   `json:"portal_customized_welcome_text_position,omitempty" validate:"omitempty,oneof=under_logo above_boxes"` // under_logo|above_boxes
-	PortalEnabled                          bool     `json:"portal_enabled"`
-	PortalHostname                         string   `json:"portal_hostname"` // ^[a-zA-Z0-9.-]+$|^$
-	PortalUseHostname                      bool     `json:"portal_use_hostname"`
-	QuickpayTestmode                       bool     `json:"quickpay_testmode"`
-	RADIUSAuthType                         string   `json:"radius_auth_type,omitempty" validate:"omitempty,oneof=chap mschapv2"` // chap|mschapv2
-	RADIUSDisconnectEnabled                bool     `json:"radius_disconnect_enabled"`
-	RADIUSDisconnectPort                   int      `json:"radius_disconnect_port,omitempty"` // [1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5]
-	RADIUSEnabled                          bool     `json:"radius_enabled"`
-	RADIUSProfileID                        string   `json:"radiusprofile_id"`
-	RedirectEnabled                        bool     `json:"redirect_enabled"`
-	RedirectHttps                          bool     `json:"redirect_https"`
-	RedirectToHttps                        bool     `json:"redirect_to_https"`
-	RedirectUrl                            string   `json:"redirect_url,omitempty"`
-	RestrictedDNSEnabled                   bool     `json:"restricted_dns_enabled"`
-	RestrictedDNSServers                   []string `json:"restricted_dns_servers" validate:"omitempty,ipv4"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^$
-	RestrictedSubnet                       string   `json:"restricted_subnet,omitempty"`
-	TemplateEngine                         string   `json:"template_engine,omitempty" validate:"omitempty,oneof=jsp angular"` // jsp|angular
-	VoucherCustomized                      bool     `json:"voucher_customized"`
-	VoucherEnabled                         bool     `json:"voucher_enabled"`
-	WechatAppID                            string   `json:"wechat_app_id"`
-	WechatEnabled                          bool     `json:"wechat_enabled"`
-	WechatShopID                           string   `json:"wechat_shop_id"`
-	XAuthorizeLoginid                      string   `json:"x_authorize_loginid,omitempty"`
-	XAuthorizeTransactionkey               string   `json:"x_authorize_transactionkey,omitempty"`
-	XFacebookAppSecret                     string   `json:"x_facebook_app_secret,omitempty"`
-	XFacebookWifiGwSecret                  string   `json:"x_facebook_wifi_gw_secret,omitempty"`
-	XGoogleClientSecret                    string   `json:"x_google_client_secret,omitempty"`
-	XIPpayTerminalid                       string   `json:"x_ippay_terminalid,omitempty"`
-	XMerchantwarriorApikey                 string   `json:"x_merchantwarrior_apikey,omitempty"`
-	XMerchantwarriorApipassphrase          string   `json:"x_merchantwarrior_apipassphrase,omitempty"`
-	XMerchantwarriorMerchantuuid           string   `json:"x_merchantwarrior_merchantuuid,omitempty"`
-	XPassword                              string   `json:"x_password,omitempty"`
-	XPaypalPassword                        string   `json:"x_paypal_password,omitempty"`
-	XPaypalSignature                       string   `json:"x_paypal_signature,omitempty"`
-	XPaypalUsername                        string   `json:"x_paypal_username,omitempty"`
-	XQuickpayAgreementid                   string   `json:"x_quickpay_agreementid,omitempty"`
-	XQuickpayApikey                        string   `json:"x_quickpay_apikey,omitempty"`
-	XQuickpayMerchantid                    string   `json:"x_quickpay_merchantid,omitempty"`
-	XStripeApiKey                          string   `json:"x_stripe_api_key,omitempty"`
-	XWechatAppSecret                       string   `json:"x_wechat_app_secret,omitempty"`
-	XWechatSecretKey                       string   `json:"x_wechat_secret_key,omitempty"`
+	AllowedSubnet                          string                     `json:"allowed_subnet,omitempty"`
+	Auth                                   string                     `json:"auth,omitempty" validate:"omitempty,oneof=none hotspot facebook_wifi custom"` // none|hotspot|facebook_wifi|custom
+	AuthUrl                                string                     `json:"auth_url,omitempty"`
+	AuthorizeUseSandbox                    bool                       `json:"authorize_use_sandbox"`
+	CustomIP                               string                     `json:"custom_ip" validate:"omitempty,ipv4"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^$
+	EcEnabled                              bool                       `json:"ec_enabled"`
+	Expire                                 int                        `json:"expire,omitempty"`                                           // [\d]+|custom
+	ExpireNumber                           int                        `json:"expire_number,omitempty"`                                    // ^[1-9][0-9]{0,5}|1000000$
+	ExpireUnit                             int                        `json:"expire_unit,omitempty" validate:"omitempty,oneof=1 60 1440"` // 1|60|1440
+	FacebookAppID                          string                     `json:"facebook_app_id"`
+	FacebookEnabled                        bool                       `json:"facebook_enabled"`
+	FacebookScopeEmail                     bool                       `json:"facebook_scope_email"`
+	FacebookWifiBlockHttps                 bool                       `json:"facebook_wifi_block_https"`
+	FacebookWifiGwID                       string                     `json:"facebook_wifi_gw_id"`
+	FacebookWifiGwName                     string                     `json:"facebook_wifi_gw_name,omitempty"`
+	Gateway                                string                     `json:"gateway,omitempty" validate:"omitempty,oneof=paypal stripe authorize quickpay merchantwarrior ippay"` // paypal|stripe|authorize|quickpay|merchantwarrior|ippay
+	GoogleClientID                         string                     `json:"google_client_id"`
+	GoogleDomain                           string                     `json:"google_domain"`
+	GoogleEnabled                          bool                       `json:"google_enabled"`
+	GoogleScopeEmail                       bool                       `json:"google_scope_email"`
+	IPpayUseSandbox                        bool                       `json:"ippay_use_sandbox"`
+	MerchantwarriorUseSandbox              bool                       `json:"merchantwarrior_use_sandbox"`
+	PasswordEnabled                        bool                       `json:"password_enabled"`
+	PaymentEnabled                         bool                       `json:"payment_enabled"`
+	PaypalUseSandbox                       bool                       `json:"paypal_use_sandbox"`
+	PortalCustomized                       bool                       `json:"portal_customized"`
+	PortalCustomizedAuthenticationText     string                     `json:"portal_customized_authentication_text,omitempty"`
+	PortalCustomizedBgColor                string                     `json:"portal_customized_bg_color"` // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
+	PortalCustomizedBgImageEnabled         bool                       `json:"portal_customized_bg_image_enabled"`
+	PortalCustomizedBgImageFilename        string                     `json:"portal_customized_bg_image_filename"`
+	PortalCustomizedBgImageTile            bool                       `json:"portal_customized_bg_image_tile"`
+	PortalCustomizedBgType                 string                     `json:"portal_customized_bg_type,omitempty" validate:"omitempty,oneof=color image gallery"` // color|image|gallery
+	PortalCustomizedBoxColor               string                     `json:"portal_customized_box_color"`                                                        // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
+	PortalCustomizedBoxLinkColor           string                     `json:"portal_customized_box_link_color"`                                                   // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
+	PortalCustomizedBoxOpacity             int                        `json:"portal_customized_box_opacity,omitempty"`                                            // ^[1-9][0-9]?$|^100$|^$
+	PortalCustomizedBoxRADIUS              int                        `json:"portal_customized_box_radius,omitempty"`                                             // [0-9]|[1-4][0-9]|50
+	PortalCustomizedBoxTextColor           string                     `json:"portal_customized_box_text_color"`                                                   // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
+	PortalCustomizedButtonColor            string                     `json:"portal_customized_button_color"`                                                     // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
+	PortalCustomizedButtonText             string                     `json:"portal_customized_button_text,omitempty"`
+	PortalCustomizedButtonTextColor        string                     `json:"portal_customized_button_text_color"`   // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
+	PortalCustomizedLanguages              []string                   `json:"portal_customized_languages,omitempty"` // ^[a-z]{2}([_-][a-zA-Z]{2,4})*$
+	PortalCustomizedLinkColor              string                     `json:"portal_customized_link_color"`          // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
+	PortalCustomizedLogoEnabled            bool                       `json:"portal_customized_logo_enabled"`
+	PortalCustomizedLogoFilename           string                     `json:"portal_customized_logo_filename"`
+	PortalCustomizedLogoPosition           string                     `json:"portal_customized_logo_position,omitempty" validate:"omitempty,oneof=left center right"` // left|center|right
+	PortalCustomizedLogoSize               int                        `json:"portal_customized_logo_size,omitempty"`                                                  // 6[4-9]|[7-9][0-9]|1[0-8][0-9]|19[0-2]
+	PortalCustomizedSuccessText            string                     `json:"portal_customized_success_text,omitempty"`
+	PortalCustomizedTextColor              string                     `json:"portal_customized_text_color"` // ^#[a-zA-Z0-9]{6}$|^#[a-zA-Z0-9]{3}$|^$
+	PortalCustomizedTitle                  string                     `json:"portal_customized_title,omitempty"`
+	PortalCustomizedTos                    string                     `json:"portal_customized_tos,omitempty"`
+	PortalCustomizedTosEnabled             bool                       `json:"portal_customized_tos_enabled"`
+	PortalCustomizedUnsplashAuthorName     string                     `json:"portal_customized_unsplash_author_name,omitempty"`
+	PortalCustomizedUnsplashAuthorUsername string                     `json:"portal_customized_unsplash_author_username,omitempty"`
+	PortalCustomizedWelcomeText            string                     `json:"portal_customized_welcome_text,omitempty"`
+	PortalCustomizedWelcomeTextEnabled     bool                       `json:"portal_customized_welcome_text_enabled"`
+	PortalCustomizedWelcomeTextPosition    string                     `json:"portal_customized_welcome_text_position,omitempty" validate:"omitempty,oneof=under_logo above_boxes"` // under_logo|above_boxes
+	PortalEnabled                          bool                       `json:"portal_enabled"`
+	PortalHostname                         string                     `json:"portal_hostname"` // ^[a-zA-Z0-9.-]+$|^$
+	PortalUseHostname                      bool                       `json:"portal_use_hostname"`
+	QuickpayTestmode                       bool                       `json:"quickpay_testmode"`
+	RADIUSAuthType                         string                     `json:"radius_auth_type,omitempty" validate:"omitempty,oneof=chap mschapv2"` // chap|mschapv2
+	RADIUSDisconnectEnabled                bool                       `json:"radius_disconnect_enabled"`
+	RADIUSDisconnectPort                   int                        `json:"radius_disconnect_port,omitempty"` // [1-9][0-9]{0,3}|[1-5][0-9]{4}|[6][0-4][0-9]{3}|[6][5][0-4][0-9]{2}|[6][5][5][0-2][0-9]|[6][5][5][3][0-5]
+	RADIUSEnabled                          bool                       `json:"radius_enabled"`
+	RADIUSProfileID                        string                     `json:"radiusprofile_id"`
+	RedirectEnabled                        bool                       `json:"redirect_enabled"`
+	RedirectHttps                          bool                       `json:"redirect_https"`
+	RedirectToHttps                        bool                       `json:"redirect_to_https"`
+	RedirectUrl                            string                     `json:"redirect_url,omitempty"`
+	RestrictedDNSEnabled                   bool                       `json:"restricted_dns_enabled"`
+	RestrictedDNSServers                   []string                   `json:"restricted_dns_servers" validate:"omitempty,ipv4"` // ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^$
+	RestrictedSubnet                       string                     `json:"restricted_subnet,omitempty"`
+	TemplateEngine                         string                     `json:"template_engine,omitempty" validate:"omitempty,oneof=jsp angular"` // jsp|angular
+	VoucherCustomized                      bool                       `json:"voucher_customized"`
+	VoucherEnabled                         bool                       `json:"voucher_enabled"`
+	WechatAppID                            string                     `json:"wechat_app_id"`
+	WechatEnabled                          bool                       `json:"wechat_enabled"`
+	WechatShopID                           string                     `json:"wechat_shop_id"`
+	XAuthorizeLoginid                      string                     `json:"x_authorize_loginid,omitempty"`
+	XAuthorizeTransactionkey               string                     `json:"x_authorize_transactionkey,omitempty"`
+	XFacebookAppSecret                     string                     `json:"x_facebook_app_secret,omitempty"`
+	XFacebookWifiGwSecret                  string                     `json:"x_facebook_wifi_gw_secret,omitempty"`
+	XGoogleClientSecret                    string                     `json:"x_google_client_secret,omitempty"`
+	XIPpayTerminalid                       string                     `json:"x_ippay_terminalid,omitempty"`
+	XMerchantwarriorApikey                 string                     `json:"x_merchantwarrior_apikey,omitempty"`
+	XMerchantwarriorApipassphrase          string                     `json:"x_merchantwarrior_apipassphrase,omitempty"`
+	XMerchantwarriorMerchantuuid           string                     `json:"x_merchantwarrior_merchantuuid,omitempty"`
+	XPassword                              string                     `json:"x_password,omitempty"`
+	XPaypalPassword                        string                     `json:"x_paypal_password,omitempty"`
+	XPaypalSignature                       string                     `json:"x_paypal_signature,omitempty"`
+	XPaypalUsername                        string                     `json:"x_paypal_username,omitempty"`
+	XQuickpayAgreementid                   string                     `json:"x_quickpay_agreementid,omitempty"`
+	XQuickpayApikey                        string                     `json:"x_quickpay_apikey,omitempty"`
+	XQuickpayMerchantid                    string                     `json:"x_quickpay_merchantid,omitempty"`
+	XStripeApiKey                          string                     `json:"x_stripe_api_key,omitempty"`
+	XWechatAppSecret                       string                     `json:"x_wechat_app_secret,omitempty"`
+	XWechatSecretKey                       string                     `json:"x_wechat_secret_key,omitempty"`
+	AdditionalFields                       map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingGuestAccess) UnmarshalJSON(b []byte) error {
@@ -159,6 +160,119 @@ func (dst *SettingGuestAccess) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingGuestAccess) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                                        {},
+		"site_id":                                    {},
+		"attr_hidden":                                {},
+		"attr_hidden_id":                             {},
+		"attr_no_delete":                             {},
+		"attr_no_edit":                               {},
+		"key":                                        {},
+		"allowed_subnet":                             {},
+		"auth":                                       {},
+		"auth_url":                                   {},
+		"authorize_use_sandbox":                      {},
+		"custom_ip":                                  {},
+		"ec_enabled":                                 {},
+		"expire":                                     {},
+		"expire_number":                              {},
+		"expire_unit":                                {},
+		"facebook_app_id":                            {},
+		"facebook_enabled":                           {},
+		"facebook_scope_email":                       {},
+		"facebook_wifi_block_https":                  {},
+		"facebook_wifi_gw_id":                        {},
+		"facebook_wifi_gw_name":                      {},
+		"gateway":                                    {},
+		"google_client_id":                           {},
+		"google_domain":                              {},
+		"google_enabled":                             {},
+		"google_scope_email":                         {},
+		"ippay_use_sandbox":                          {},
+		"merchantwarrior_use_sandbox":                {},
+		"password_enabled":                           {},
+		"payment_enabled":                            {},
+		"paypal_use_sandbox":                         {},
+		"portal_customized":                          {},
+		"portal_customized_authentication_text":      {},
+		"portal_customized_bg_color":                 {},
+		"portal_customized_bg_image_enabled":         {},
+		"portal_customized_bg_image_filename":        {},
+		"portal_customized_bg_image_tile":            {},
+		"portal_customized_bg_type":                  {},
+		"portal_customized_box_color":                {},
+		"portal_customized_box_link_color":           {},
+		"portal_customized_box_opacity":              {},
+		"portal_customized_box_radius":               {},
+		"portal_customized_box_text_color":           {},
+		"portal_customized_button_color":             {},
+		"portal_customized_button_text":              {},
+		"portal_customized_button_text_color":        {},
+		"portal_customized_languages":                {},
+		"portal_customized_link_color":               {},
+		"portal_customized_logo_enabled":             {},
+		"portal_customized_logo_filename":            {},
+		"portal_customized_logo_position":            {},
+		"portal_customized_logo_size":                {},
+		"portal_customized_success_text":             {},
+		"portal_customized_text_color":               {},
+		"portal_customized_title":                    {},
+		"portal_customized_tos":                      {},
+		"portal_customized_tos_enabled":              {},
+		"portal_customized_unsplash_author_name":     {},
+		"portal_customized_unsplash_author_username": {},
+		"portal_customized_welcome_text":             {},
+		"portal_customized_welcome_text_enabled":     {},
+		"portal_customized_welcome_text_position":    {},
+		"portal_enabled":                             {},
+		"portal_hostname":                            {},
+		"portal_use_hostname":                        {},
+		"quickpay_testmode":                          {},
+		"radius_auth_type":                           {},
+		"radius_disconnect_enabled":                  {},
+		"radius_disconnect_port":                     {},
+		"radius_enabled":                             {},
+		"radiusprofile_id":                           {},
+		"redirect_enabled":                           {},
+		"redirect_https":                             {},
+		"redirect_to_https":                          {},
+		"redirect_url":                               {},
+		"restricted_dns_enabled":                     {},
+		"restricted_dns_servers":                     {},
+		"restricted_subnet":                          {},
+		"template_engine":                            {},
+		"voucher_customized":                         {},
+		"voucher_enabled":                            {},
+		"wechat_app_id":                              {},
+		"wechat_enabled":                             {},
+		"wechat_shop_id":                             {},
+		"x_authorize_loginid":                        {},
+		"x_authorize_transactionkey":                 {},
+		"x_facebook_app_secret":                      {},
+		"x_facebook_wifi_gw_secret":                  {},
+		"x_google_client_secret":                     {},
+		"x_ippay_terminalid":                         {},
+		"x_merchantwarrior_apikey":                   {},
+		"x_merchantwarrior_apipassphrase":            {},
+		"x_merchantwarrior_merchantuuid":             {},
+		"x_password":                                 {},
+		"x_paypal_password":                          {},
+		"x_paypal_signature":                         {},
+		"x_paypal_username":                          {},
+		"x_quickpay_agreementid":                     {},
+		"x_quickpay_apikey":                          {},
+		"x_quickpay_merchantid":                      {},
+		"x_stripe_api_key":                           {},
+		"x_wechat_app_secret":                        {},
+		"x_wechat_secret_key":                        {},
+	}
+}
+
+func (dst *SettingGuestAccess) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingGuestAccess Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingGuestAccess(ctx context.Context, site string) (*SettingGuestAccess, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingGuestAccessKey)
@@ -174,7 +288,10 @@ func (c *client) GetSettingGuestAccess(ctx context.Context, site string) (*Setti
 // UpdateSettingGuestAccess Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingGuestAccess(ctx context.Context, site string, s *SettingGuestAccess) (*SettingGuestAccess, error) {
 	s.Key = SettingGuestAccessKey
-	result, err := c.SetSetting(ctx, site, SettingGuestAccessKey, s)
+	result, err := c.SetSetting(ctx, site, SettingGuestAccessKey, struct {
+		*SettingGuestAccess
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingGuestAccess: s})
 	if err != nil {
 		return nil, err
 	}

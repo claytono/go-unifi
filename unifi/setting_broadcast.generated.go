@@ -29,12 +29,13 @@ type SettingBroadcast struct {
 
 	Key string `json:"key"`
 
-	SoundAfterEnabled   bool   `json:"sound_after_enabled"`
-	SoundAfterResource  string `json:"sound_after_resource,omitempty"`
-	SoundAfterType      string `json:"sound_after_type,omitempty" validate:"omitempty,oneof=sample media"` // sample|media
-	SoundBeforeEnabled  bool   `json:"sound_before_enabled"`
-	SoundBeforeResource string `json:"sound_before_resource,omitempty"`
-	SoundBeforeType     string `json:"sound_before_type,omitempty" validate:"omitempty,oneof=sample media"` // sample|media
+	SoundAfterEnabled   bool                       `json:"sound_after_enabled"`
+	SoundAfterResource  string                     `json:"sound_after_resource,omitempty"`
+	SoundAfterType      string                     `json:"sound_after_type,omitempty" validate:"omitempty,oneof=sample media"` // sample|media
+	SoundBeforeEnabled  bool                       `json:"sound_before_enabled"`
+	SoundBeforeResource string                     `json:"sound_before_resource,omitempty"`
+	SoundBeforeType     string                     `json:"sound_before_type,omitempty" validate:"omitempty,oneof=sample media"` // sample|media
+	AdditionalFields    map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingBroadcast) UnmarshalJSON(b []byte) error {
@@ -53,6 +54,28 @@ func (dst *SettingBroadcast) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingBroadcast) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                   {},
+		"site_id":               {},
+		"attr_hidden":           {},
+		"attr_hidden_id":        {},
+		"attr_no_delete":        {},
+		"attr_no_edit":          {},
+		"key":                   {},
+		"sound_after_enabled":   {},
+		"sound_after_resource":  {},
+		"sound_after_type":      {},
+		"sound_before_enabled":  {},
+		"sound_before_resource": {},
+		"sound_before_type":     {},
+	}
+}
+
+func (dst *SettingBroadcast) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingBroadcast Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingBroadcast(ctx context.Context, site string) (*SettingBroadcast, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingBroadcastKey)
@@ -68,7 +91,10 @@ func (c *client) GetSettingBroadcast(ctx context.Context, site string) (*Setting
 // UpdateSettingBroadcast Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingBroadcast(ctx context.Context, site string, s *SettingBroadcast) (*SettingBroadcast, error) {
 	s.Key = SettingBroadcastKey
-	result, err := c.SetSetting(ctx, site, SettingBroadcastKey, s)
+	result, err := c.SetSetting(ctx, site, SettingBroadcastKey, struct {
+		*SettingBroadcast
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingBroadcast: s})
 	if err != nil {
 		return nil, err
 	}

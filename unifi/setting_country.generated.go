@@ -29,7 +29,8 @@ type SettingCountry struct {
 
 	Key string `json:"key"`
 
-	Code int `json:"code,omitempty"`
+	Code             int                        `json:"code,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingCountry) UnmarshalJSON(b []byte) error {
@@ -51,6 +52,23 @@ func (dst *SettingCountry) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingCountry) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"code":           {},
+	}
+}
+
+func (dst *SettingCountry) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingCountry Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingCountry(ctx context.Context, site string) (*SettingCountry, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingCountryKey)
@@ -66,7 +84,10 @@ func (c *client) GetSettingCountry(ctx context.Context, site string) (*SettingCo
 // UpdateSettingCountry Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingCountry(ctx context.Context, site string, s *SettingCountry) (*SettingCountry, error) {
 	s.Key = SettingCountryKey
-	result, err := c.SetSetting(ctx, site, SettingCountryKey, s)
+	result, err := c.SetSetting(ctx, site, SettingCountryKey, struct {
+		*SettingCountry
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingCountry: s})
 	if err != nil {
 		return nil, err
 	}

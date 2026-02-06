@@ -25,11 +25,12 @@ type DHCPOption struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	Code   string `json:"code,omitempty"` // ^(?!(?:15|42|43|44|51|66|67|252)$)([7-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4])$
-	Name   string `json:"name,omitempty"` // ^[A-Za-z0-9-_]{1,25}$
-	Signed bool   `json:"signed"`
-	Type   string `json:"type,omitempty" validate:"omitempty,oneof=boolean hexarray integer ipaddress macaddress text"` // ^(boolean|hexarray|integer|ipaddress|macaddress|text)$
-	Width  int    `json:"width,omitempty" validate:"omitempty,oneof=8 16 32"`                                           // ^(8|16|32)$
+	Code             string                     `json:"code,omitempty"` // ^(?!(?:15|42|43|44|51|66|67|252)$)([7-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4])$
+	Name             string                     `json:"name,omitempty"` // ^[A-Za-z0-9-_]{1,25}$
+	Signed           bool                       `json:"signed"`
+	Type             string                     `json:"type,omitempty" validate:"omitempty,oneof=boolean hexarray integer ipaddress macaddress text"` // ^(boolean|hexarray|integer|ipaddress|macaddress|text)$
+	Width            int                        `json:"width,omitempty" validate:"omitempty,oneof=8 16 32"`                                           // ^(8|16|32)$
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *DHCPOption) UnmarshalJSON(b []byte) error {
@@ -51,6 +52,24 @@ func (dst *DHCPOption) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *DHCPOption) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"code":           {},
+		"name":           {},
+		"signed":         {},
+		"type":           {},
+		"width":          {},
+	}
+}
+
+func (dst *DHCPOption) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 func (c *client) listDHCPOption(ctx context.Context, site string) ([]DHCPOption, error) {
 	var respBody struct {
 		Meta Meta         `json:"meta"`
@@ -66,12 +85,22 @@ func (c *client) listDHCPOption(ctx context.Context, site string) ([]DHCPOption,
 }
 
 func (c *client) getDHCPOption(ctx context.Context, site, id string) (*DHCPOption, error) {
+	path := fmt.Sprintf("s/%s/rest/dhcpoption/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item DHCPOption
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta         `json:"meta"`
 		Data []DHCPOption `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/dhcpoption/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +127,10 @@ func (c *client) createDHCPOption(ctx context.Context, site string, d *DHCPOptio
 		Data []DHCPOption `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/dhcpoption", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/dhcpoption", site), struct {
+		*DHCPOption
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{DHCPOption: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +150,10 @@ func (c *client) updateDHCPOption(ctx context.Context, site string, d *DHCPOptio
 		Data []DHCPOption `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/dhcpoption/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/dhcpoption/%s", site, d.ID), struct {
+		*DHCPOption
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{DHCPOption: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

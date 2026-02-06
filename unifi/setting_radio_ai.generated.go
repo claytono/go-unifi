@@ -46,6 +46,7 @@ type SettingRadioAi struct {
 	RadiosConfiguration         []SettingRadioAiRadiosConfiguration `json:"radios_configuration,omitempty"`
 	SettingPreference           string                              `json:"setting_preference,omitempty" validate:"omitempty,oneof=auto manual"` // auto|manual
 	UseXy                       bool                                `json:"useXY"`
+	AdditionalFields            map[string]json.RawMessage          `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingRadioAi) UnmarshalJSON(b []byte) error {
@@ -90,10 +91,44 @@ func (dst *SettingRadioAi) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingRadioAi) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                             {},
+		"site_id":                         {},
+		"attr_hidden":                     {},
+		"attr_hidden_id":                  {},
+		"attr_no_delete":                  {},
+		"attr_no_edit":                    {},
+		"key":                             {},
+		"auto_adjust_channels_to_country": {},
+		"auto_channel_presets_type":       {},
+		"channels_6e":                     {},
+		"channels_blacklist":              {},
+		"channels_na":                     {},
+		"channels_ng":                     {},
+		"cron_expr":                       {},
+		"default":                         {},
+		"enabled":                         {},
+		"exclude_devices":                 {},
+		"ht_modes_na":                     {},
+		"ht_modes_ng":                     {},
+		"optimize":                        {},
+		"radios":                          {},
+		"radios_configuration":            {},
+		"setting_preference":              {},
+		"useXY":                           {},
+	}
+}
+
+func (dst *SettingRadioAi) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type SettingRadioAiChannelsBlacklist struct {
-	Channel      int    `json:"channel,omitempty"`                                                       // [1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-9]|2[0-1][0-9]|22[0-1]|22[5-9]|233
-	ChannelWidth int    `json:"channel_width,omitempty" validate:"omitempty,oneof=20 40 80 160 240 320"` // 20|40|80|160|240|320
-	Radio        string `json:"radio,omitempty" validate:"omitempty,oneof=na ng 6e"`                     // na|ng|6e
+	Channel          int                        `json:"channel,omitempty"`                                                       // [1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-9]|2[0-1][0-9]|22[0-1]|22[5-9]|233
+	ChannelWidth     int                        `json:"channel_width,omitempty" validate:"omitempty,oneof=20 40 80 160 240 320"` // 20|40|80|160|240|320
+	Radio            string                     `json:"radio,omitempty" validate:"omitempty,oneof=na ng 6e"`                     // na|ng|6e
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingRadioAiChannelsBlacklist) UnmarshalJSON(b []byte) error {
@@ -117,10 +152,23 @@ func (dst *SettingRadioAiChannelsBlacklist) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingRadioAiChannelsBlacklist) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"channel":       {},
+		"channel_width": {},
+		"radio":         {},
+	}
+}
+
+func (dst *SettingRadioAiChannelsBlacklist) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type SettingRadioAiRadiosConfiguration struct {
-	ChannelWidth int    `json:"channel_width,omitempty" validate:"omitempty,oneof=20 40 80 160 320"` // 20|40|80|160|320
-	Dfs          bool   `json:"dfs"`
-	Radio        string `json:"radio,omitempty" validate:"omitempty,oneof=na ng 6e"` // na|ng|6e
+	ChannelWidth     int                        `json:"channel_width,omitempty" validate:"omitempty,oneof=20 40 80 160 320"` // 20|40|80|160|320
+	Dfs              bool                       `json:"dfs"`
+	Radio            string                     `json:"radio,omitempty" validate:"omitempty,oneof=na ng 6e"` // na|ng|6e
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingRadioAiRadiosConfiguration) UnmarshalJSON(b []byte) error {
@@ -142,6 +190,18 @@ func (dst *SettingRadioAiRadiosConfiguration) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingRadioAiRadiosConfiguration) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"channel_width": {},
+		"dfs":           {},
+		"radio":         {},
+	}
+}
+
+func (dst *SettingRadioAiRadiosConfiguration) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingRadioAi Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingRadioAi(ctx context.Context, site string) (*SettingRadioAi, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingRadioAiKey)
@@ -157,7 +217,10 @@ func (c *client) GetSettingRadioAi(ctx context.Context, site string) (*SettingRa
 // UpdateSettingRadioAi Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingRadioAi(ctx context.Context, site string, s *SettingRadioAi) (*SettingRadioAi, error) {
 	s.Key = SettingRadioAiKey
-	result, err := c.SetSetting(ctx, site, SettingRadioAiKey, s)
+	result, err := c.SetSetting(ctx, site, SettingRadioAiKey, struct {
+		*SettingRadioAi
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingRadioAi: s})
 	if err != nil {
 		return nil, err
 	}

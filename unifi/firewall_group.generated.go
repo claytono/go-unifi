@@ -25,9 +25,10 @@ type FirewallGroup struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	GroupMembers []string `json:"group_members,omitempty"`
-	GroupType    string   `json:"group_type,omitempty" validate:"omitempty,oneof=address-group port-group ipv6-address-group"` // address-group|port-group|ipv6-address-group
-	Name         string   `json:"name,omitempty" validate:"omitempty,gte=1,lte=64"`                                            // .{1,64}
+	GroupMembers     []string                   `json:"group_members,omitempty"`
+	GroupType        string                     `json:"group_type,omitempty" validate:"omitempty,oneof=address-group port-group ipv6-address-group"` // address-group|port-group|ipv6-address-group
+	Name             string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=64"`                                            // .{1,64}
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *FirewallGroup) UnmarshalJSON(b []byte) error {
@@ -46,6 +47,24 @@ func (dst *FirewallGroup) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *FirewallGroup) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"group_members":  {},
+		"group_type":     {},
+		"name":           {},
+	}
+}
+
+func (dst *FirewallGroup) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listFirewallGroup(ctx context.Context, site string) ([]FirewallGroup, error) {
 	var respBody struct {
 		Meta Meta            `json:"meta"`
@@ -61,12 +80,22 @@ func (c *client) listFirewallGroup(ctx context.Context, site string) ([]Firewall
 }
 
 func (c *client) getFirewallGroup(ctx context.Context, site, id string) (*FirewallGroup, error) {
+	path := fmt.Sprintf("s/%s/rest/firewallgroup/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item FirewallGroup
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta            `json:"meta"`
 		Data []FirewallGroup `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/firewallgroup/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +122,10 @@ func (c *client) createFirewallGroup(ctx context.Context, site string, d *Firewa
 		Data []FirewallGroup `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/firewallgroup", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/firewallgroup", site), struct {
+		*FirewallGroup
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{FirewallGroup: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +145,10 @@ func (c *client) updateFirewallGroup(ctx context.Context, site string, d *Firewa
 		Data []FirewallGroup `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/firewallgroup/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/firewallgroup/%s", site, d.ID), struct {
+		*FirewallGroup
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{FirewallGroup: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

@@ -42,6 +42,7 @@ type SettingIps struct {
 	MemoryOptimized             bool                                 `json:"memory_optimized"`
 	RestrictTorrents            bool                                 `json:"restrict_torrents"`
 	Suppression                 SettingIpsSuppression                `json:"suppression,omitempty"`
+	AdditionalFields            map[string]json.RawMessage           `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingIps) UnmarshalJSON(b []byte) error {
@@ -60,8 +61,36 @@ func (dst *SettingIps) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingIps) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                           {},
+		"site_id":                       {},
+		"attr_hidden":                   {},
+		"attr_hidden_id":                {},
+		"attr_no_delete":                {},
+		"attr_no_edit":                  {},
+		"key":                           {},
+		"ad_blocking_configurations":    {},
+		"ad_blocking_enabled":           {},
+		"advanced_filtering_preference": {},
+		"dns_filtering":                 {},
+		"dns_filters":                   {},
+		"enabled_categories":            {},
+		"enabled_networks":              {},
+		"honeypot":                      {},
+		"honeypot_enabled":              {},
+		"ips_mode":                      {},
+		"memory_optimized":              {},
+		"restrict_torrents":             {},
+		"suppression":                   {},
+	}
+}
+
+func (dst *SettingIps) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 type SettingIpsAdBlockingConfigurations struct {
-	NetworkID string `json:"network_id"`
+	NetworkID        string                     `json:"network_id"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingIpsAdBlockingConfigurations) UnmarshalJSON(b []byte) error {
@@ -80,13 +109,24 @@ func (dst *SettingIpsAdBlockingConfigurations) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingIpsAdBlockingConfigurations) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"network_id": {},
+	}
+}
+
+func (dst *SettingIpsAdBlockingConfigurations) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type SettingIpsAlerts struct {
-	Category  string               `json:"category,omitempty"`
-	Gid       int                  `json:"gid,omitempty"`
-	ID        int                  `json:"id,omitempty"`
-	Signature string               `json:"signature,omitempty"`
-	Tracking  []SettingIpsTracking `json:"tracking,omitempty"`
-	Type      string               `json:"type,omitempty" validate:"omitempty,oneof=all track"` // all|track
+	Category         string                     `json:"category,omitempty"`
+	Gid              int                        `json:"gid,omitempty"`
+	ID               int                        `json:"id,omitempty"`
+	Signature        string                     `json:"signature,omitempty"`
+	Tracking         []SettingIpsTracking       `json:"tracking,omitempty"`
+	Type             string                     `json:"type,omitempty" validate:"omitempty,oneof=all track"` // all|track
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingIpsAlerts) UnmarshalJSON(b []byte) error {
@@ -110,15 +150,31 @@ func (dst *SettingIpsAlerts) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingIpsAlerts) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"category":  {},
+		"gid":       {},
+		"id":        {},
+		"signature": {},
+		"tracking":  {},
+		"type":      {},
+	}
+}
+
+func (dst *SettingIpsAlerts) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type SettingIpsDNSFilters struct {
-	AllowedSites []string `json:"allowed_sites,omitempty"` // ^[a-zA-Z0-9.-]+$|^$
-	BlockedSites []string `json:"blocked_sites,omitempty"` // ^[a-zA-Z0-9.-]+$|^$
-	BlockedTld   []string `json:"blocked_tld,omitempty"`   // ^[a-zA-Z0-9.-]+$|^$
-	Description  string   `json:"description,omitempty"`
-	Filter       string   `json:"filter,omitempty" validate:"omitempty,oneof=none work family"` // none|work|family
-	Name         string   `json:"name,omitempty"`
-	NetworkID    string   `json:"network_id"`
-	Version      string   `json:"version,omitempty" validate:"omitempty,oneof=v4 v6"` // v4|v6
+	AllowedSites     []string                   `json:"allowed_sites,omitempty"` // ^[a-zA-Z0-9.-]+$|^$
+	BlockedSites     []string                   `json:"blocked_sites,omitempty"` // ^[a-zA-Z0-9.-]+$|^$
+	BlockedTld       []string                   `json:"blocked_tld,omitempty"`   // ^[a-zA-Z0-9.-]+$|^$
+	Description      string                     `json:"description,omitempty"`
+	Filter           string                     `json:"filter,omitempty" validate:"omitempty,oneof=none work family"` // none|work|family
+	Name             string                     `json:"name,omitempty"`
+	NetworkID        string                     `json:"network_id"`
+	Version          string                     `json:"version,omitempty" validate:"omitempty,oneof=v4 v6"` // v4|v6
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingIpsDNSFilters) UnmarshalJSON(b []byte) error {
@@ -137,10 +193,28 @@ func (dst *SettingIpsDNSFilters) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingIpsDNSFilters) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"allowed_sites": {},
+		"blocked_sites": {},
+		"blocked_tld":   {},
+		"description":   {},
+		"filter":        {},
+		"name":          {},
+		"network_id":    {},
+		"version":       {},
+	}
+}
+
+func (dst *SettingIpsDNSFilters) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type SettingIpsHoneypot struct {
-	IPAddress string `json:"ip_address,omitempty"`
-	NetworkID string `json:"network_id"`
-	Version   string `json:"version,omitempty" validate:"omitempty,oneof=v4 v6"` // v4|v6
+	IPAddress        string                     `json:"ip_address,omitempty"`
+	NetworkID        string                     `json:"network_id"`
+	Version          string                     `json:"version,omitempty" validate:"omitempty,oneof=v4 v6"` // v4|v6
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingIpsHoneypot) UnmarshalJSON(b []byte) error {
@@ -159,9 +233,22 @@ func (dst *SettingIpsHoneypot) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingIpsHoneypot) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"ip_address": {},
+		"network_id": {},
+		"version":    {},
+	}
+}
+
+func (dst *SettingIpsHoneypot) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type SettingIpsSuppression struct {
-	Alerts    []SettingIpsAlerts    `json:"alerts,omitempty"`
-	Whitelist []SettingIpsWhitelist `json:"whitelist,omitempty"`
+	Alerts           []SettingIpsAlerts         `json:"alerts,omitempty"`
+	Whitelist        []SettingIpsWhitelist      `json:"whitelist,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingIpsSuppression) UnmarshalJSON(b []byte) error {
@@ -180,10 +267,22 @@ func (dst *SettingIpsSuppression) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingIpsSuppression) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"alerts":    {},
+		"whitelist": {},
+	}
+}
+
+func (dst *SettingIpsSuppression) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type SettingIpsTracking struct {
-	Direction string `json:"direction,omitempty" validate:"omitempty,oneof=both src dest"` // both|src|dest
-	Mode      string `json:"mode,omitempty" validate:"omitempty,oneof=ip subnet network"`  // ip|subnet|network
-	Value     string `json:"value,omitempty"`
+	Direction        string                     `json:"direction,omitempty" validate:"omitempty,oneof=both src dest"` // both|src|dest
+	Mode             string                     `json:"mode,omitempty" validate:"omitempty,oneof=ip subnet network"`  // ip|subnet|network
+	Value            string                     `json:"value,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingIpsTracking) UnmarshalJSON(b []byte) error {
@@ -202,10 +301,23 @@ func (dst *SettingIpsTracking) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingIpsTracking) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"direction": {},
+		"mode":      {},
+		"value":     {},
+	}
+}
+
+func (dst *SettingIpsTracking) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 type SettingIpsWhitelist struct {
-	Direction string `json:"direction,omitempty" validate:"omitempty,oneof=both src dest"` // both|src|dest
-	Mode      string `json:"mode,omitempty" validate:"omitempty,oneof=ip subnet network"`  // ip|subnet|network
-	Value     string `json:"value,omitempty"`
+	Direction        string                     `json:"direction,omitempty" validate:"omitempty,oneof=both src dest"` // both|src|dest
+	Mode             string                     `json:"mode,omitempty" validate:"omitempty,oneof=ip subnet network"`  // ip|subnet|network
+	Value            string                     `json:"value,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingIpsWhitelist) UnmarshalJSON(b []byte) error {
@@ -224,6 +336,18 @@ func (dst *SettingIpsWhitelist) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingIpsWhitelist) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"direction": {},
+		"mode":      {},
+		"value":     {},
+	}
+}
+
+func (dst *SettingIpsWhitelist) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingIps Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingIps(ctx context.Context, site string) (*SettingIps, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingIpsKey)
@@ -239,7 +363,10 @@ func (c *client) GetSettingIps(ctx context.Context, site string) (*SettingIps, e
 // UpdateSettingIps Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingIps(ctx context.Context, site string, s *SettingIps) (*SettingIps, error) {
 	s.Key = SettingIpsKey
-	result, err := c.SetSetting(ctx, site, SettingIpsKey, s)
+	result, err := c.SetSetting(ctx, site, SettingIpsKey, struct {
+		*SettingIps
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingIps: s})
 	if err != nil {
 		return nil, err
 	}

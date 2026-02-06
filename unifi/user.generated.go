@@ -28,22 +28,23 @@ type User struct {
 	DevIdOverride int    `json:"dev_id_override,omitempty"`            // non-generated field
 	IP            string `json:"ip,omitempty" validate:"omitempty,ip"` // non-generated field
 
-	Blocked                       bool   `json:"blocked,omitempty"`
-	FixedApEnabled                bool   `json:"fixed_ap_enabled"`
-	FixedApMAC                    string `json:"fixed_ap_mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
-	FixedIP                       string `json:"fixed_ip,omitempty"`
-	Hostname                      string `json:"hostname,omitempty"`
-	LastSeen                      int    `json:"last_seen,omitempty"`
-	LocalDNSRecord                string `json:"local_dns_record,omitempty"`
-	LocalDNSRecordEnabled         bool   `json:"local_dns_record_enabled"`
-	MAC                           string `json:"mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
-	Name                          string `json:"name,omitempty"`
-	NetworkID                     string `json:"network_id"`
-	Note                          string `json:"note,omitempty"`
-	UseFixedIP                    bool   `json:"use_fixedip"`
-	UserGroupID                   string `json:"usergroup_id"`
-	VirtualNetworkOverrideEnabled bool   `json:"virtual_network_override_enabled"`
-	VirtualNetworkOverrideID      string `json:"virtual_network_override_id"`
+	Blocked                       bool                       `json:"blocked,omitempty"`
+	FixedApEnabled                bool                       `json:"fixed_ap_enabled"`
+	FixedApMAC                    string                     `json:"fixed_ap_mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
+	FixedIP                       string                     `json:"fixed_ip,omitempty"`
+	Hostname                      string                     `json:"hostname,omitempty"`
+	LastSeen                      int                        `json:"last_seen,omitempty"`
+	LocalDNSRecord                string                     `json:"local_dns_record,omitempty"`
+	LocalDNSRecordEnabled         bool                       `json:"local_dns_record_enabled"`
+	MAC                           string                     `json:"mac,omitempty" validate:"omitempty,mac"` // ^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$
+	Name                          string                     `json:"name,omitempty"`
+	NetworkID                     string                     `json:"network_id"`
+	Note                          string                     `json:"note,omitempty"`
+	UseFixedIP                    bool                       `json:"use_fixedip"`
+	UserGroupID                   string                     `json:"usergroup_id"`
+	VirtualNetworkOverrideEnabled bool                       `json:"virtual_network_override_enabled"`
+	VirtualNetworkOverrideID      string                     `json:"virtual_network_override_id"`
+	AdditionalFields              map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *User) UnmarshalJSON(b []byte) error {
@@ -65,6 +66,37 @@ func (dst *User) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *User) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                              {},
+		"site_id":                          {},
+		"attr_hidden":                      {},
+		"attr_hidden_id":                   {},
+		"attr_no_delete":                   {},
+		"attr_no_edit":                     {},
+		"dev_id_override":                  {},
+		"ip":                               {},
+		"blocked":                          {},
+		"fixed_ap_enabled":                 {},
+		"fixed_ap_mac":                     {},
+		"fixed_ip":                         {},
+		"hostname":                         {},
+		"last_seen":                        {},
+		"local_dns_record":                 {},
+		"local_dns_record_enabled":         {},
+		"mac":                              {},
+		"name":                             {},
+		"network_id":                       {},
+		"note":                             {},
+		"use_fixedip":                      {},
+		"usergroup_id":                     {},
+		"virtual_network_override_enabled": {},
+		"virtual_network_override_id":      {},
+	}
+}
+
+func (dst *User) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 func (c *client) listUser(ctx context.Context, site string) ([]User, error) {
 	var respBody struct {
 		Meta Meta   `json:"meta"`
@@ -80,12 +112,22 @@ func (c *client) listUser(ctx context.Context, site string) ([]User, error) {
 }
 
 func (c *client) getUser(ctx context.Context, site, id string) (*User, error) {
+	path := fmt.Sprintf("s/%s/rest/user/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item User
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta   `json:"meta"`
 		Data []User `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/user/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +154,10 @@ func (c *client) createUser(ctx context.Context, site string, d *User) (*User, e
 		Data []User `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/user", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/user", site), struct {
+		*User
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{User: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +177,10 @@ func (c *client) updateUser(ctx context.Context, site string, d *User) (*User, e
 		Data []User `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/user/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/user/%s", site, d.ID), struct {
+		*User
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{User: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

@@ -25,12 +25,13 @@ type VirtualDevice struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	HeightInMeters float64 `json:"heightInMeters,omitempty"`
-	Locked         bool    `json:"locked"`
-	MapID          string  `json:"map_id"`
-	Type           string  `json:"type,omitempty" validate:"omitempty,oneof=uap usg usw"` // uap|usg|usw
-	X              string  `json:"x,omitempty"`
-	Y              string  `json:"y,omitempty"`
+	HeightInMeters   float64                    `json:"heightInMeters,omitempty"`
+	Locked           bool                       `json:"locked"`
+	MapID            string                     `json:"map_id"`
+	Type             string                     `json:"type,omitempty" validate:"omitempty,oneof=uap usg usw"` // uap|usg|usw
+	X                string                     `json:"x,omitempty"`
+	Y                string                     `json:"y,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *VirtualDevice) UnmarshalJSON(b []byte) error {
@@ -49,6 +50,27 @@ func (dst *VirtualDevice) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *VirtualDevice) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"heightInMeters": {},
+		"locked":         {},
+		"map_id":         {},
+		"type":           {},
+		"x":              {},
+		"y":              {},
+	}
+}
+
+func (dst *VirtualDevice) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listVirtualDevice(ctx context.Context, site string) ([]VirtualDevice, error) {
 	var respBody struct {
 		Meta Meta            `json:"meta"`
@@ -64,12 +86,22 @@ func (c *client) listVirtualDevice(ctx context.Context, site string) ([]VirtualD
 }
 
 func (c *client) getVirtualDevice(ctx context.Context, site, id string) (*VirtualDevice, error) {
+	path := fmt.Sprintf("s/%s/rest/virtualdevice/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item VirtualDevice
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta            `json:"meta"`
 		Data []VirtualDevice `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/virtualdevice/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +128,10 @@ func (c *client) createVirtualDevice(ctx context.Context, site string, d *Virtua
 		Data []VirtualDevice `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/virtualdevice", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/virtualdevice", site), struct {
+		*VirtualDevice
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{VirtualDevice: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +151,10 @@ func (c *client) updateVirtualDevice(ctx context.Context, site string, d *Virtua
 		Data []VirtualDevice `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/virtualdevice/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/virtualdevice/%s", site, d.ID), struct {
+		*VirtualDevice
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{VirtualDevice: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

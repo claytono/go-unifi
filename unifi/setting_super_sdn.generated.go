@@ -29,12 +29,13 @@ type SettingSuperSdn struct {
 
 	Key string `json:"key"`
 
-	AuthToken       string `json:"auth_token,omitempty"`
-	DeviceID        string `json:"device_id"`
-	Enabled         bool   `json:"enabled"`
-	Migrated        bool   `json:"migrated"`
-	SsoLoginEnabled string `json:"sso_login_enabled,omitempty"`
-	UbicUuid        string `json:"ubic_uuid,omitempty"`
+	AuthToken        string                     `json:"auth_token,omitempty"`
+	DeviceID         string                     `json:"device_id"`
+	Enabled          bool                       `json:"enabled"`
+	Migrated         bool                       `json:"migrated"`
+	SsoLoginEnabled  string                     `json:"sso_login_enabled,omitempty"`
+	UbicUuid         string                     `json:"ubic_uuid,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingSuperSdn) UnmarshalJSON(b []byte) error {
@@ -53,6 +54,28 @@ func (dst *SettingSuperSdn) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingSuperSdn) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":               {},
+		"site_id":           {},
+		"attr_hidden":       {},
+		"attr_hidden_id":    {},
+		"attr_no_delete":    {},
+		"attr_no_edit":      {},
+		"key":               {},
+		"auth_token":        {},
+		"device_id":         {},
+		"enabled":           {},
+		"migrated":          {},
+		"sso_login_enabled": {},
+		"ubic_uuid":         {},
+	}
+}
+
+func (dst *SettingSuperSdn) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingSuperSdn Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingSuperSdn(ctx context.Context, site string) (*SettingSuperSdn, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingSuperSdnKey)
@@ -68,7 +91,10 @@ func (c *client) GetSettingSuperSdn(ctx context.Context, site string) (*SettingS
 // UpdateSettingSuperSdn Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingSuperSdn(ctx context.Context, site string, s *SettingSuperSdn) (*SettingSuperSdn, error) {
 	s.Key = SettingSuperSdnKey
-	result, err := c.SetSetting(ctx, site, SettingSuperSdnKey, s)
+	result, err := c.SetSetting(ctx, site, SettingSuperSdnKey, struct {
+		*SettingSuperSdn
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingSuperSdn: s})
 	if err != nil {
 		return nil, err
 	}

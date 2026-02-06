@@ -29,7 +29,8 @@ type SettingSuperMail struct {
 
 	Key string `json:"key"`
 
-	Provider string `json:"provider,omitempty" validate:"omitempty,oneof=smtp cloud disabled"` // smtp|cloud|disabled
+	Provider         string                     `json:"provider,omitempty" validate:"omitempty,oneof=smtp cloud disabled"` // smtp|cloud|disabled
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingSuperMail) UnmarshalJSON(b []byte) error {
@@ -48,6 +49,23 @@ func (dst *SettingSuperMail) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingSuperMail) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"provider":       {},
+	}
+}
+
+func (dst *SettingSuperMail) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingSuperMail Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingSuperMail(ctx context.Context, site string) (*SettingSuperMail, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingSuperMailKey)
@@ -63,7 +81,10 @@ func (c *client) GetSettingSuperMail(ctx context.Context, site string) (*Setting
 // UpdateSettingSuperMail Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingSuperMail(ctx context.Context, site string, s *SettingSuperMail) (*SettingSuperMail, error) {
 	s.Key = SettingSuperMailKey
-	result, err := c.SetSetting(ctx, site, SettingSuperMailKey, s)
+	result, err := c.SetSetting(ctx, site, SettingSuperMailKey, struct {
+		*SettingSuperMail
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingSuperMail: s})
 	if err != nil {
 		return nil, err
 	}

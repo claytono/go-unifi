@@ -29,7 +29,8 @@ type SettingPorta struct {
 
 	Key string `json:"key"`
 
-	Ugw3WAN2Enabled bool `json:"ugw3_wan2_enabled"`
+	Ugw3WAN2Enabled  bool                       `json:"ugw3_wan2_enabled"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingPorta) UnmarshalJSON(b []byte) error {
@@ -48,6 +49,23 @@ func (dst *SettingPorta) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingPorta) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":               {},
+		"site_id":           {},
+		"attr_hidden":       {},
+		"attr_hidden_id":    {},
+		"attr_no_delete":    {},
+		"attr_no_edit":      {},
+		"key":               {},
+		"ugw3_wan2_enabled": {},
+	}
+}
+
+func (dst *SettingPorta) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingPorta Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingPorta(ctx context.Context, site string) (*SettingPorta, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingPortaKey)
@@ -63,7 +81,10 @@ func (c *client) GetSettingPorta(ctx context.Context, site string) (*SettingPort
 // UpdateSettingPorta Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingPorta(ctx context.Context, site string, s *SettingPorta) (*SettingPorta, error) {
 	s.Key = SettingPortaKey
-	result, err := c.SetSetting(ctx, site, SettingPortaKey, s)
+	result, err := c.SetSetting(ctx, site, SettingPortaKey, struct {
+		*SettingPorta
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingPorta: s})
 	if err != nil {
 		return nil, err
 	}

@@ -25,9 +25,10 @@ type DpiGroup struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	DPIappIDs []string `json:"dpiapp_ids,omitempty" validate:"omitempty,w_regex"` // [\d\w]+
-	Enabled   bool     `json:"enabled"`
-	Name      string   `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	DPIappIDs        []string                   `json:"dpiapp_ids,omitempty" validate:"omitempty,w_regex"` // [\d\w]+
+	Enabled          bool                       `json:"enabled"`
+	Name             string                     `json:"name,omitempty" validate:"omitempty,gte=1,lte=128"` // .{1,128}
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *DpiGroup) UnmarshalJSON(b []byte) error {
@@ -46,6 +47,22 @@ func (dst *DpiGroup) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *DpiGroup) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"dpiapp_ids":     {},
+		"enabled":        {},
+		"name":           {},
+	}
+}
+
+func (dst *DpiGroup) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 func (c *client) listDpiGroup(ctx context.Context, site string) ([]DpiGroup, error) {
 	var respBody struct {
 		Meta Meta       `json:"meta"`
@@ -61,12 +78,22 @@ func (c *client) listDpiGroup(ctx context.Context, site string) ([]DpiGroup, err
 }
 
 func (c *client) getDpiGroup(ctx context.Context, site, id string) (*DpiGroup, error) {
+	path := fmt.Sprintf("s/%s/rest/dpigroup/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item DpiGroup
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta       `json:"meta"`
 		Data []DpiGroup `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/dpigroup/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +120,10 @@ func (c *client) createDpiGroup(ctx context.Context, site string, d *DpiGroup) (
 		Data []DpiGroup `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/dpigroup", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/dpigroup", site), struct {
+		*DpiGroup
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{DpiGroup: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +143,10 @@ func (c *client) updateDpiGroup(ctx context.Context, site string, d *DpiGroup) (
 		Data []DpiGroup `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/dpigroup/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/dpigroup/%s", site, d.ID), struct {
+		*DpiGroup
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{DpiGroup: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

@@ -29,11 +29,12 @@ type SettingSnmp struct {
 
 	Key string `json:"key"`
 
-	Community string `json:"community,omitempty" validate:"omitempty,gte=1,lte=256"` // .{1,256}
-	Enabled   bool   `json:"enabled"`
-	EnabledV3 bool   `json:"enabledV3"`
-	Username  string `json:"username,omitempty"`   // [a-zA-Z0-9_-]{1,30}
-	XPassword string `json:"x_password,omitempty"` // [^'"]{8,32}
+	Community        string                     `json:"community,omitempty" validate:"omitempty,gte=1,lte=256"` // .{1,256}
+	Enabled          bool                       `json:"enabled"`
+	EnabledV3        bool                       `json:"enabledV3"`
+	Username         string                     `json:"username,omitempty"`   // [a-zA-Z0-9_-]{1,30}
+	XPassword        string                     `json:"x_password,omitempty"` // [^'"]{8,32}
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingSnmp) UnmarshalJSON(b []byte) error {
@@ -52,6 +53,25 @@ func (dst *SettingSnmp) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingSnmp) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":            {},
+		"site_id":        {},
+		"attr_hidden":    {},
+		"attr_hidden_id": {},
+		"attr_no_delete": {},
+		"attr_no_edit":   {},
+		"key":            {},
+		"community":      {},
+		"enabled":        {},
+		"enabledV3":      {},
+		"username":       {},
+		"x_password":     {},
+	}
+}
+
+func (dst *SettingSnmp) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 // GetSettingSnmp Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingSnmp(ctx context.Context, site string) (*SettingSnmp, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingSnmpKey)
@@ -67,7 +87,10 @@ func (c *client) GetSettingSnmp(ctx context.Context, site string) (*SettingSnmp,
 // UpdateSettingSnmp Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingSnmp(ctx context.Context, site string, s *SettingSnmp) (*SettingSnmp, error) {
 	s.Key = SettingSnmpKey
-	result, err := c.SetSetting(ctx, site, SettingSnmpKey, s)
+	result, err := c.SetSetting(ctx, site, SettingSnmpKey, struct {
+		*SettingSnmp
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingSnmp: s})
 	if err != nil {
 		return nil, err
 	}

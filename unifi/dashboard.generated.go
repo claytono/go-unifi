@@ -25,11 +25,12 @@ type Dashboard struct {
 	NoDelete bool   `json:"attr_no_delete,omitempty"`
 	NoEdit   bool   `json:"attr_no_edit,omitempty"`
 
-	ControllerVersion string             `json:"controller_version,omitempty"`
-	Desc              string             `json:"desc,omitempty"`
-	IsPublic          bool               `json:"is_public"`
-	Modules           []DashboardModules `json:"modules,omitempty"`
-	Name              string             `json:"name,omitempty"`
+	ControllerVersion string                     `json:"controller_version,omitempty"`
+	Desc              string                     `json:"desc,omitempty"`
+	IsPublic          bool                       `json:"is_public"`
+	Modules           []DashboardModules         `json:"modules,omitempty"`
+	Name              string                     `json:"name,omitempty"`
+	AdditionalFields  map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *Dashboard) UnmarshalJSON(b []byte) error {
@@ -48,11 +49,30 @@ func (dst *Dashboard) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *Dashboard) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                {},
+		"site_id":            {},
+		"attr_hidden":        {},
+		"attr_hidden_id":     {},
+		"attr_no_delete":     {},
+		"attr_no_edit":       {},
+		"controller_version": {},
+		"desc":               {},
+		"is_public":          {},
+		"modules":            {},
+		"name":               {},
+	}
+}
+
+func (dst *Dashboard) SetAdditionalFields(ef map[string]json.RawMessage) { dst.AdditionalFields = ef }
+
 type DashboardModules struct {
-	Config       string `json:"config,omitempty"`
-	ID           string `json:"id"`
-	ModuleID     string `json:"module_id"`
-	Restrictions string `json:"restrictions,omitempty"`
+	Config           string                     `json:"config,omitempty"`
+	ID               string                     `json:"id"`
+	ModuleID         string                     `json:"module_id"`
+	Restrictions     string                     `json:"restrictions,omitempty"`
+	AdditionalFields map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *DashboardModules) UnmarshalJSON(b []byte) error {
@@ -71,6 +91,19 @@ func (dst *DashboardModules) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *DashboardModules) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"config":       {},
+		"id":           {},
+		"module_id":    {},
+		"restrictions": {},
+	}
+}
+
+func (dst *DashboardModules) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 func (c *client) listDashboard(ctx context.Context, site string) ([]Dashboard, error) {
 	var respBody struct {
 		Meta Meta        `json:"meta"`
@@ -86,12 +119,22 @@ func (c *client) listDashboard(ctx context.Context, site string) ([]Dashboard, e
 }
 
 func (c *client) getDashboard(ctx context.Context, site, id string) (*Dashboard, error) {
+	path := fmt.Sprintf("s/%s/rest/dashboard/%s", site, id)
+
+	if c.includeAdditionalFields {
+		var item Dashboard
+		if err := c.getWithAdditionalFieldsV1(ctx, path, &item); err != nil {
+			return nil, err
+		}
+		return &item, nil
+	}
+
 	var respBody struct {
 		Meta Meta        `json:"meta"`
 		Data []Dashboard `json:"data"`
 	}
 
-	err := c.Get(ctx, fmt.Sprintf("s/%s/rest/dashboard/%s", site, id), nil, &respBody)
+	err := c.Get(ctx, path, nil, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +161,10 @@ func (c *client) createDashboard(ctx context.Context, site string, d *Dashboard)
 		Data []Dashboard `json:"data"`
 	}
 
-	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/dashboard", site), d, &respBody)
+	err := c.Post(ctx, fmt.Sprintf("s/%s/rest/dashboard", site), struct {
+		*Dashboard
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{Dashboard: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +184,10 @@ func (c *client) updateDashboard(ctx context.Context, site string, d *Dashboard)
 		Data []Dashboard `json:"data"`
 	}
 
-	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/dashboard/%s", site, d.ID), d, &respBody)
+	err := c.Put(ctx, fmt.Sprintf("s/%s/rest/dashboard/%s", site, d.ID), struct {
+		*Dashboard
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{Dashboard: d}, &respBody)
 	if err != nil {
 		return nil, err
 	}

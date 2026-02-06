@@ -29,8 +29,9 @@ type SettingGlobalNat struct {
 
 	Key string `json:"key"`
 
-	ExcludedNetworkIDs []string `json:"excluded_network_ids,omitempty"`
-	Mode               string   `json:"mode,omitempty" validate:"omitempty,oneof=auto custom off"` // auto|custom|off
+	ExcludedNetworkIDs []string                   `json:"excluded_network_ids,omitempty"`
+	Mode               string                     `json:"mode,omitempty" validate:"omitempty,oneof=auto custom off"` // auto|custom|off
+	AdditionalFields   map[string]json.RawMessage `json:"_additional_properties,omitempty"`
 }
 
 func (dst *SettingGlobalNat) UnmarshalJSON(b []byte) error {
@@ -49,6 +50,24 @@ func (dst *SettingGlobalNat) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (dst *SettingGlobalNat) KnownJSONFields() map[string]struct{} {
+	return map[string]struct{}{
+		"_id":                  {},
+		"site_id":              {},
+		"attr_hidden":          {},
+		"attr_hidden_id":       {},
+		"attr_no_delete":       {},
+		"attr_no_edit":         {},
+		"key":                  {},
+		"excluded_network_ids": {},
+		"mode":                 {},
+	}
+}
+
+func (dst *SettingGlobalNat) SetAdditionalFields(ef map[string]json.RawMessage) {
+	dst.AdditionalFields = ef
+}
+
 // GetSettingGlobalNat Experimental! This function is not yet stable and may change in the future.
 func (c *client) GetSettingGlobalNat(ctx context.Context, site string) (*SettingGlobalNat, error) {
 	s, f, err := c.GetSetting(ctx, site, SettingGlobalNatKey)
@@ -64,7 +83,10 @@ func (c *client) GetSettingGlobalNat(ctx context.Context, site string) (*Setting
 // UpdateSettingGlobalNat Experimental! This function is not yet stable and may change in the future.
 func (c *client) UpdateSettingGlobalNat(ctx context.Context, site string, s *SettingGlobalNat) (*SettingGlobalNat, error) {
 	s.Key = SettingGlobalNatKey
-	result, err := c.SetSetting(ctx, site, SettingGlobalNatKey, s)
+	result, err := c.SetSetting(ctx, site, SettingGlobalNatKey, struct {
+		*SettingGlobalNat
+		AdditionalFields *struct{} `json:"_additional_properties,omitempty"`
+	}{SettingGlobalNat: s})
 	if err != nil {
 		return nil, err
 	}
